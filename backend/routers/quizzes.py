@@ -24,7 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import cast, literal
 
 from database import get_db
-from dependencies import get_current_user
+from dependencies import get_current_user, require_admin
 from models import AttemptStatus, Bookmark, Category, Difficulty, Question, QStatus, QuizAttempt, User
 
 router = APIRouter()
@@ -895,6 +895,67 @@ async def list_attempts(
                 category_name=category_name,
             )
         )
+
+    pages = (total + per_page - 1) // per_page if total > 0 else 0
+
+    return AttemptListResponse(
+        items=items,
+        meta=PaginationMeta(total=total, page=page, per_page=per_page, pages=pages),
+    )
+
+@router.get("/admin/{user_id}", response_model=AttemptListResponse)
+async def admin_list_attempts(
+    user_id: int,
+    page: int = 1,
+    per_page: int = 20,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    """Admin: list any student's quiz attempt history by user_id path param.
+    Distinct from GET /quizzes?user_id= — this is the contract-defined
+    admin-specific route at /quizzes/admin/{user_id}."""
+    from dependencies import require_admin as _require_admin
+
+    query = select(QuizAttempt).where(QuizAttempt.user_id == user_id)
+
+    count_query = select(func.count()).select_from(query.subquery())
+    total = (await db.execute(count_query)).scalar_one()
+
+    page = max(1, page)
+    per_page = max(1, min(per_page, 100))
+
+    query = (
+        query.order_by(QuizAttempt.started_at.desc())
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+    )
+    result = await db.execute(query)
+    attempts = result.scalars().all()
+
+    items = []
+    for attempt in attempts:
+        category_name = None
+        if attempt.category_id is not None:
+            category = await db.get(Category, attempt.category_id)
+            category_name = category.name if category else None
+
+        time_taken_secs = None
+        if attempt.finished_at:
+            time_taken_secs = int(
+                (attempt.finished_at - attempt.started_at).total_seconds()
+            )
+
+        items.append(AttemptSummaryOut(
+            attempt_id=attempt.id,
+            score=float(attempt.score) if attempt.score is not None else None,
+            correct_count=attempt.correct_count,
+            total_questions=len(attempt.question_ids),
+            status=attempt.status,
+            time_taken_secs=time_taken_secs,
+            started_at=attempt.started_at,
+            finished_at=attempt.finished_at,
+            category_name=category_name,
+        ))
 
     pages = (total + per_page - 1) // per_page if total > 0 else 0
 

@@ -109,7 +109,7 @@ async def test_change_password_wrong_current_returns_400(
 ):
     resp = await client.post(
         "/users/me/change-password",
-        json={"current_password": "WrongPassword1", "new_password": "NewSecure456"},
+        json={"current_password": "WrongPassword1", "new_password": "NewSecure456!"},
         headers=auth_headers(student_token),
     )
     assert resp.status_code == 400
@@ -124,7 +124,7 @@ async def test_change_password_correct_returns_200(
 
     resp = await client.post(
         "/users/me/change-password",
-        json={"current_password": "Student123", "new_password": "NewSecure456"},
+        json={"current_password": "Student123!", "new_password": "NewSecure456!"},
         headers=auth_headers(student_token),
     )
     assert resp.status_code == 200
@@ -141,7 +141,7 @@ async def test_change_password_new_too_short(
 ):
     resp = await client.post(
         "/users/me/change-password",
-        json={"current_password": "Student123", "new_password": "short"},
+        json={"current_password": "Student123!", "new_password": "short"},
         headers=auth_headers(student_token),
     )
     # Pydantic min_length=8 should catch this
@@ -153,7 +153,7 @@ async def test_change_password_no_uppercase_returns_422(
 ):
     resp = await client.post(
         "/users/me/change-password",
-        json={"current_password": "Student123", "new_password": "nouppercase1"},
+        json={"current_password": "Student123!", "new_password": "nouppercase1"},
         headers=auth_headers(student_token),
     )
     assert resp.status_code == 422
@@ -164,7 +164,29 @@ async def test_change_password_no_digit_returns_422(
 ):
     resp = await client.post(
         "/users/me/change-password",
-        json={"current_password": "Student123", "new_password": "NoDigitHere"},
+        json={"current_password": "Student123!", "new_password": "NoDigitHere"},
+        headers=auth_headers(student_token),
+    )
+    assert resp.status_code == 422
+
+
+async def test_change_password_no_lowercase_returns_422(
+    client: AsyncClient, student_token: str
+):
+    resp = await client.post(
+        "/users/me/change-password",
+        json={"current_password": "Student123!", "new_password": "NOLOWER123!"},
+        headers=auth_headers(student_token),
+    )
+    assert resp.status_code == 422
+
+
+async def test_change_password_no_special_char_returns_422(
+    client: AsyncClient, student_token: str
+):
+    resp = await client.post(
+        "/users/me/change-password",
+        json={"current_password": "Student123!", "new_password": "NoSpecial123"},
         headers=auth_headers(student_token),
     )
     assert resp.status_code == 422
@@ -173,7 +195,7 @@ async def test_change_password_no_digit_returns_422(
 async def test_change_password_requires_auth(client: AsyncClient):
     resp = await client.post(
         "/users/me/change-password",
-        json={"current_password": "Student123", "new_password": "NewSecure456"},
+        json={"current_password": "Student123!", "new_password": "NewSecure456!"},
     )
     assert resp.status_code in (401, 403)
 

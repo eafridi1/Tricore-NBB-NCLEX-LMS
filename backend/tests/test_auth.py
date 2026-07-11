@@ -31,7 +31,7 @@ async def test_register_success(client: AsyncClient, db: AsyncSession):
     resp = await client.post("/auth/register", json={
         "name": "Sarah Khan",
         "email": "sarah@test.com",
-        "password": "Secure123",
+        "password": "Secure123!",
     })
     assert resp.status_code == 201
     data = resp.json()
@@ -47,7 +47,7 @@ async def test_register_success(client: AsyncClient, db: AsyncSession):
 
 
 async def test_register_duplicate_email(client: AsyncClient, db: AsyncSession):
-    payload = {"name": "Ali Test", "email": "dup@test.com", "password": "Secure123"}
+    payload = {"name": "Ali Test", "email": "dup@test.com", "password": "Secure123!"}
     await client.post("/auth/register", json=payload)
     resp = await client.post("/auth/register", json=payload)
     assert resp.status_code == 409
@@ -67,12 +67,26 @@ async def test_register_weak_password_no_digit(anon_client: AsyncClient):
     assert resp.status_code == 422
 
 
+async def test_register_weak_password_no_lowercase(anon_client: AsyncClient):
+    resp = await anon_client.post("/auth/register", json={
+        "name": "C Test", "email": "c@test.com", "password": "NOLOWER123!",
+    })
+    assert resp.status_code == 422
+
+
+async def test_register_weak_password_no_special_char(anon_client: AsyncClient):
+    resp = await anon_client.post("/auth/register", json={
+        "name": "D Test", "email": "d@test.com", "password": "NoSpecial123",
+    })
+    assert resp.status_code == 422
+
+
 # ── GET /auth/verify-email ───────────────────────────────────────────────────
 
 async def test_verify_email_success(client: AsyncClient, db: AsyncSession):
     from sqlalchemy import select
     reg = await client.post("/auth/register", json={
-        "name": "Bob Test", "email": "verify@test.com", "password": "Secure123",
+        "name": "Bob Test", "email": "verify@test.com", "password": "Secure123!",
     })
     assert reg.status_code == 201, reg.text
     user = await db.scalar(select(User).where(User.email == "verify@test.com"))
@@ -95,7 +109,7 @@ async def test_verify_email_already_used(client: AsyncClient, db: AsyncSession):
     """Token is cleared after first use — second click on the same link 400s."""
     from sqlalchemy import select
     reg = await client.post("/auth/register", json={
-        "name": "Carol Test", "email": "double@test.com", "password": "Secure123",
+        "name": "Carol Test", "email": "double@test.com", "password": "Secure123!",
     })
     assert reg.status_code == 201, reg.text
     user = await db.scalar(select(User).where(User.email == "double@test.com"))
@@ -111,7 +125,7 @@ async def test_verify_email_already_used(client: AsyncClient, db: AsyncSession):
 async def test_resend_verification_success(client: AsyncClient, db: AsyncSession):
     from sqlalchemy import select
     reg = await client.post("/auth/register", json={
-        "name": "Dave Test", "email": "resend@test.com", "password": "Secure123",
+        "name": "Dave Test", "email": "resend@test.com", "password": "Secure123!",
     })
     assert reg.status_code == 201, reg.text
     user = await db.scalar(select(User).where(User.email == "resend@test.com"))
@@ -138,7 +152,7 @@ async def _make_verified_user(db: AsyncSession, email: str = "login@test.com") -
     user = User(
         name="Login User",
         email=email,
-        password_hash=hash_password("Secure123"),
+        password_hash=hash_password("Secure123!"),
         role="student",
         is_verified=True,
         is_active=True,
@@ -152,7 +166,7 @@ async def _make_verified_user(db: AsyncSession, email: str = "login@test.com") -
 async def test_login_step1_success(client: AsyncClient, db: AsyncSession):
     await _make_verified_user(db)
     resp = await client.post("/auth/login", json={
-        "email": "login@test.com", "password": "Secure123",
+        "email": "login@test.com", "password": "Secure123!",
     })
     assert resp.status_code == 200
     assert resp.json()["status"] == "otp_sent"
@@ -196,7 +210,7 @@ async def test_login_unverified_account(client: AsyncClient, db: AsyncSession):
     user = User(
         name="Unverified",
         email="unverified@test.com",
-        password_hash=hash_password("Secure123"),
+        password_hash=hash_password("Secure123!"),
         role="student",
         is_verified=False,
         is_active=True,
@@ -205,14 +219,14 @@ async def test_login_unverified_account(client: AsyncClient, db: AsyncSession):
     await db.flush()
 
     resp = await client.post("/auth/login", json={
-        "email": "unverified@test.com", "password": "Secure123",
+        "email": "unverified@test.com", "password": "Secure123!",
     })
     assert resp.status_code == 403
 
 
 async def test_login_nonexistent_email(client: AsyncClient):
     resp = await client.post("/auth/login", json={
-        "email": "ghost@test.com", "password": "Secure123",
+        "email": "ghost@test.com", "password": "Secure123!",
     })
     assert resp.status_code == 401
 
@@ -361,7 +375,7 @@ async def test_reset_password_success(client: AsyncClient, db: AsyncSession):
 
     resp = await client.post("/auth/reset-password", json={
         "token": "valid-reset-token",
-        "new_password": "NewSecure456",
+        "new_password": "NewSecure456!",
     })
     assert resp.status_code == 200
 
@@ -372,7 +386,7 @@ async def test_reset_password_success(client: AsyncClient, db: AsyncSession):
 
 async def test_reset_password_invalid_token(client: AsyncClient):
     resp = await client.post("/auth/reset-password", json={
-        "token": "fake-token", "new_password": "NewSecure456",
+        "token": "fake-token", "new_password": "NewSecure456!",
     })
     assert resp.status_code == 400
 
@@ -386,7 +400,7 @@ async def test_reset_password_expired_token(client: AsyncClient, db: AsyncSessio
     await db.flush()
 
     resp = await client.post("/auth/reset-password", json={
-        "token": "expired-token", "new_password": "NewSecure456",
+        "token": "expired-token", "new_password": "NewSecure456!",
     })
     assert resp.status_code == 400
 
@@ -407,7 +421,7 @@ async def test_reset_password_clears_all_sessions(client: AsyncClient, db: Async
     await db.flush()
 
     await client.post("/auth/reset-password", json={
-        "token": "clear-sessions-token", "new_password": "NewSecure456",
+        "token": "clear-sessions-token", "new_password": "NewSecure456!",
     })
 
     remaining = await db.scalar(

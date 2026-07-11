@@ -15,7 +15,7 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SecretStr
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,6 +23,7 @@ from auth_utils import hash_password, verify_password
 from database import get_db
 from dependencies import get_current_user, require_admin
 from models import LoginLog, LoginStatus, User, UserRole
+from validators import StrongPassword
 
 router = APIRouter()
 
@@ -50,8 +51,8 @@ class UpdateProfileRequest(BaseModel):
 
 
 class ChangePasswordRequest(BaseModel):
-    current_password: str
-    new_password: str = Field(..., min_length=8)
+    current_password: SecretStr
+    new_password: StrongPassword
 
 
 class PaginationMeta(BaseModel):
@@ -188,7 +189,7 @@ async def change_password(
     # Verify current password before accepting the new one — prevents
     # an attacker with a hijacked session from silently changing credentials
     # without knowing the original password.
-    if not verify_password(data.current_password, current_user.password_hash):
+    if not verify_password(data.current_password.get_secret_value(), current_user.password_hash):
         raise HTTPException(
             status_code=400,
             detail="Current password is incorrect.",
@@ -202,18 +203,8 @@ async def change_password(
     # CONTRACT GAP: if the contract ever adds explicit strength rules to
     # ChangePasswordRequest, remove this manual check and let Pydantic
     # handle it. Until then, enforcing the same rules as registration.
-    if not any(c.isupper() for c in data.new_password):
-        raise HTTPException(
-            status_code=422,
-            detail="New password must contain at least one uppercase letter.",
-        )
-    if not any(c.isdigit() for c in data.new_password):
-        raise HTTPException(
-            status_code=422,
-            detail="New password must contain at least one number.",
-        )
 
-    current_user.password_hash = hash_password(data.new_password)
+    current_user.password_hash = hash_password(data.new_password.get_secret_value())
     await db.commit()
     return MessageResponse(message="Password changed successfully.")
 

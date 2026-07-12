@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { isAxiosError } from "axios";
-import { apiClient } from "@/lib/api-client";
+import axios, { isAxiosError } from "axios";
 import { setAccessToken, clearAccessToken } from "@/lib/token-store";
 import type { components } from "@/types/api";
 
@@ -16,7 +15,11 @@ export function useRefreshSession(): SessionStatus {
 
     async function attemptRefresh() {
       try {
-        const { data } = await apiClient.post<RefreshResponse>("/auth/refresh");
+        const { data } = await axios.post<RefreshResponse>(
+          "/api/auth/refresh",
+          null,
+          { withCredentials: true }
+        );
         if (cancelled) return;
         setAccessToken(data.access_token);
         setStatus("authenticated");

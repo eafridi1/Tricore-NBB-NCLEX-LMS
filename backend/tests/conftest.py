@@ -56,17 +56,19 @@ def setup_tables():
 
 @pytest_asyncio.fixture
 async def db() -> AsyncGenerator[AsyncSession, None]:
+    """Fresh engine + session per test. Truncates all tables on teardown."""
     engine = create_async_engine(TEST_DATABASE_URL, echo=False, pool_size=1, max_overflow=0)
     SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
-    async with SessionLocal() as session:
+    session = SessionLocal()
+    try:
         yield session
-        await session.rollback()
-
-    async with engine.begin() as conn:
-        await conn.execute(text(_TRUNCATE_SQL))
-
-    await engine.dispose()
+    finally:
+        # Always close the session first, then truncate on a fresh connection
+        await session.close()
+        async with engine.begin() as conn:
+            await conn.execute(text(_TRUNCATE_SQL))
+        await engine.dispose()
 
 
 # ── Simple client fixture — no DB needed ──────────────────────────────────────
@@ -112,7 +114,7 @@ async def student_user(db: AsyncSession):
     user = User(
         name="Test Student",
         email="student@test.com",
-        password_hash=hash_password("Student123"),
+        password_hash=hash_password("Student123!"),
         role=UserRole.student,
         is_verified=True,
         is_active=True,
@@ -131,7 +133,7 @@ async def admin_user(db: AsyncSession):
     user = User(
         name="Test Admin",
         email="admin@test.com",
-        password_hash=hash_password("Admin123"),
+        password_hash=hash_password("Admin123!"),
         role=UserRole.admin,
         is_verified=True,
         is_active=True,

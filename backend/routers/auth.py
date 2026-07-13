@@ -1,13 +1,6 @@
 """
 backend/routers/auth.py
 ========================
-Real implementation of contract.py SECTION 1 — AUTH.
-Every path, method, and response_model below matches the contract exactly.
-No renaming, no restructuring — see Week 1 tasks.md Task 3.3 / 3.4.
-
-Wire into main.py with:
-    from routers import auth as auth_router
-    app.include_router(auth_router.router, prefix="/auth", tags=["auth"])
 """
 
 from __future__ import annotations
@@ -18,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, SecretStr
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -35,6 +28,7 @@ from database import get_db
 from email_utils import send_email
 from models import LoginLog, LoginStatus, Session, User, UserRole
 from auth_utils import otp_context
+from validators import StrongPassword
 
 router = APIRouter()
 bearer = HTTPBearer()
@@ -69,18 +63,9 @@ from passlib.context import CryptContext  # noqa: E402
 # here since the contract only defines shape, not validation logic.
 
 class RegisterRequest(BaseModel):
-    name: str = Field(..., min_length=2, max_length=120, example="Sarah Khan")
-    email: EmailStr = Field(..., example="sarah@example.com")
-    password: str = Field(..., min_length=8, example="Secret123")
-
-    @field_validator("password")
-    @classmethod
-    def password_strength(cls, v: str) -> str:
-        if not any(c.isupper() for c in v):
-            raise ValueError("Password must contain at least one uppercase letter")
-        if not any(c.isdigit() for c in v):
-            raise ValueError("Password must contain at least one number")
-        return v
+    name: str = Field(..., min_length=2, max_length=120)
+    email: EmailStr
+    password: StrongPassword  # SecretStr — never logged or printed
 
 
 class RegisterResponse(BaseModel):
@@ -90,7 +75,23 @@ class RegisterResponse(BaseModel):
 
 class LoginRequest(BaseModel):
     email: EmailStr = Field(..., example="sarah@example.com")
-    password: str = Field(..., example="Secret123")
+    password: SecretStr
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [{
+                "email": "sarah@example.com",
+                "password": "S3cur3P@ss!"
+            }]
+        }
+    }
+    # SecretStr but NOT StrongPassword —
+    # login should NOT validate strength rules,
+    # only the stored hash matters. A user with an
+    # old weak password must still be able to log in
+    # (so they can change it). Enforcing StrongPassword
+    # here would lock out anyone whose password predates
+    # the new rules.
 
 
 class LoginStep1Response(BaseModel):
@@ -140,16 +141,7 @@ class ForgotPasswordRequest(BaseModel):
 
 class ResetPasswordRequest(BaseModel):
     token: str = Field(..., example="reset_token_hex...")
-    new_password: str = Field(..., min_length=8, example="NewSecret456")
-
-    @field_validator("new_password")
-    @classmethod
-    def password_strength(cls, v: str) -> str:
-        if not any(c.isupper() for c in v):
-            raise ValueError("Password must contain at least one uppercase letter")
-        if not any(c.isdigit() for c in v):
-            raise ValueError("Password must contain at least one number")
-        return v
+    new_password: StrongPassword
 
 
 class MessageResponse(BaseModel):
@@ -240,7 +232,7 @@ async def register(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
     user = User(
         name=data.name,
         email=data.email,
-        password_hash=hash_password(data.password),
+        password_hash=hash_password(data.password.get_secret_value()),
         role=UserRole.student,
         is_verified=False,
         is_active=True,
@@ -349,7 +341,7 @@ async def login(
             detail="Please verify your email before logging in.",
         )
 
-    if not verify_password(data.password, user.password_hash):
+    if not verify_password(data.password.get_secret_value(), user.password_hash):
         user.failed_logins += 1
         if user.failed_logins >= MAX_FAILED_LOGINS:
             user.locked_until = now + timedelta(minutes=LOCKOUT_MINUTES)
@@ -562,7 +554,7 @@ async def reset_password(
             status_code=400, detail="Reset link has expired. Please request a new one."
         )
 
-    user.password_hash = hash_password(data.new_password)
+    user.password_hash = hash_password(data.new_password.get_secret_value())
     user.reset_token = None
     user.reset_expires = None
     # Also resetting lockout state on password reset — if the account was

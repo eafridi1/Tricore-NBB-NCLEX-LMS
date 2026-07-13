@@ -3,9 +3,18 @@ import re
 
 
 class RegisterRequest(BaseModel):
-    name: str = Field(..., min_length=2, max_length=120, example="Sarah Khan")
-    email: EmailStr = Field(..., example="sarah@example.com")
-    password: str = Field(..., min_length=8, example="Secret123")
+    name: str = Field(..., min_length=2, max_length=120)
+    email: EmailStr
+    password: str = Field(..., min_length=8)
+
+    @field_validator("password")
+    @classmethod
+    def password_strength(cls, v):
+        if not re.search(r"[A-Z]", v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not re.search(r"\d", v):
+            raise ValueError("Password must contain at least one number")
+        return v
 
 
 class RegisterResponse(BaseModel):
@@ -62,17 +71,5 @@ class MessageResponse(BaseModel):
     message: str
 
 
-class RegisterRequest(BaseModel):
-    name: str = Field(..., min_length=2, max_length=120)
-    email: EmailStr
-    password: str = Field(..., min_length=8)
 
-    @field_validator("password")
-    @classmethod
-    def password_strength(cls, v):
-        if not re.search(r"[A-Z]", v):
-            raise ValueError("Password must contain at least one uppercase letter")
-        if not re.search(r"\d", v):
-            raise ValueError("Password must contain at least one number")
-        return v
 

@@ -3,8 +3,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from jose import JWTError
 from database import get_db
-from models import User
 from auth_utils import decode_access_token
+from models import User, UserRole
 
 bearer = HTTPBearer()
 
@@ -44,10 +44,6 @@ Paste this into dependencies.py rather than creating a new file — it
 belongs alongside get_current_user and require_admin, not as a separate
 module.
 """
-
-from fastapi import Depends, HTTPException
-
-from models import User, UserRole
 
 
 async def require_admin_or_reviewer(current_user: User = Depends(get_current_user)) -> User:

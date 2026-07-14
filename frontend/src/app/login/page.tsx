@@ -34,7 +34,7 @@ export default function LoginPage() {
       { email, otp },
       {
         onSuccess: () => {
-          router.push("/");
+          router.push("/dashboard");
         },
         onError: (err) => {
           // Both of these mean the login attempt is gone — restart step 1.

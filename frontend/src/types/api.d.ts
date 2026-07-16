@@ -384,6 +384,423 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/quizzes/admin/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin List Attempts
+         * @description Admin: list any student's quiz attempt history by user_id path param.
+         *     Distinct from GET /quizzes?user_id= — this is the contract-defined
+         *     admin-specific route at /quizzes/admin/{user_id}.
+         */
+        get: operations["admin_list_attempts_quizzes_admin__user_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get My Profile */
+        get: operations["get_my_profile_users_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update My Profile */
+        patch: operations["update_my_profile_users_me_patch"];
+        trace?: never;
+    };
+    "/users/me/change-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Change Password */
+        post: operations["change_password_users_me_change_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/me/login-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Login History */
+        get: operations["my_login_history_users_me_login_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Users */
+        get: operations["list_users_users_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get User */
+        get: operations["get_user_users__user_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Admin Update User */
+        patch: operations["admin_update_user_users__user_id__patch"];
+        trace?: never;
+    };
+    "/users/{user_id}/login-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin User Login History */
+        get: operations["admin_user_login_history_users__user_id__login_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookmarks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Bookmarks */
+        get: operations["list_bookmarks_bookmarks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin Stats */
+        get: operations["admin_stats_admin_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/analytics/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Analytics */
+        get: operations["my_analytics_admin_analytics_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/analytics/students": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** At Risk Students */
+        get: operations["at_risk_students_admin_analytics_students_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/analytics/students/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Student Analytics */
+        get: operations["student_analytics_admin_analytics_students__user_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/security/ip-whitelist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Ip Whitelist */
+        get: operations["list_ip_whitelist_admin_security_ip_whitelist_get"];
+        put?: never;
+        /** Add Ip Whitelist */
+        post: operations["add_ip_whitelist_admin_security_ip_whitelist_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/security/ip-whitelist/{entry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Ip Whitelist */
+        delete: operations["remove_ip_whitelist_admin_security_ip_whitelist__entry_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/security/sessions/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Force Logout User */
+        delete: operations["force_logout_user_admin_security_sessions__user_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/announcements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Announcements */
+        get: operations["list_announcements_announcements_get"];
+        put?: never;
+        /** Create Announcement */
+        post: operations["create_announcement_announcements_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/announcements/{announcement_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Announcement */
+        delete: operations["delete_announcement_announcements__announcement_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Announcement */
+        patch: operations["update_announcement_announcements__announcement_id__patch"];
+        trace?: never;
+    };
+    "/pdfs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Pdfs */
+        get: operations["list_pdfs_pdfs_get"];
+        put?: never;
+        /** Create Pdf */
+        post: operations["create_pdf_pdfs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pdfs/{pdf_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download Pdf
+         * @description Returns watermarked PDF bytes as a StreamingResponse.
+         *
+         *     NOTE: response_model is intentionally omitted here — FastAPI's
+         *     response_model validation applies to JSON responses only, and
+         *     StreamingResponse bypasses it. The contract's PDFDownloadResponse
+         *     model (JSON with download_url) is NOT used — see module docstring
+         *     for the full rationale. The frontend must handle this as a file
+         *     download (fetch with responseType: 'blob', or an <a> tag), not
+         *     a JSON parse.
+         */
+        get: operations["download_pdf_pdfs__pdf_id__download_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pdfs/{pdf_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Pdf */
+        delete: operations["delete_pdf_pdfs__pdf_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Pdf */
+        patch: operations["update_pdf_pdfs__pdf_id__patch"];
+        trace?: never;
+    };
+    "/videos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Videos */
+        get: operations["list_videos_videos_get"];
+        put?: never;
+        /** Create Video */
+        post: operations["create_video_videos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/videos/{video_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Video */
+        get: operations["get_video_videos__video_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Video */
+        delete: operations["delete_video_videos__video_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Video */
+        patch: operations["update_video_videos__video_id__patch"];
+        trace?: never;
+    };
+    "/videos/{video_id}/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Update Video Progress */
+        post: operations["update_video_progress_videos__video_id__progress_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -405,6 +822,65 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AdminUpdateUserRequest */
+        AdminUpdateUserRequest: {
+            /** Is Active */
+            is_active?: boolean | null;
+            role?: components["schemas"]["UserRole"] | null;
+        };
+        /** AnnouncementCreateRequest */
+        AnnouncementCreateRequest: {
+            /**
+             * Title
+             * @example Platform Maintenance – June 22
+             */
+            title: string;
+            /**
+             * Body
+             * @example The platform will be unavailable for 2 hours...
+             */
+            body: string;
+            /**
+             * Is Published
+             * @default false
+             */
+            is_published: boolean;
+        };
+        /** AnnouncementListResponse */
+        AnnouncementListResponse: {
+            /** Items */
+            items: components["schemas"]["AnnouncementOut"][];
+            meta: components["schemas"]["routers__announcements__PaginationMeta"];
+        };
+        /** AnnouncementOut */
+        AnnouncementOut: {
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+            /** Body */
+            body: string;
+            /** Is Published */
+            is_published: boolean;
+            /** Published At */
+            published_at: string | null;
+            /** Created By */
+            created_by: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** AnnouncementUpdateRequest */
+        AnnouncementUpdateRequest: {
+            /** Title */
+            title?: string | null;
+            /** Body */
+            body?: string | null;
+            /** Is Published */
+            is_published?: boolean | null;
+        };
         /** AnswerRequest */
         AnswerRequest: {
             /**
@@ -422,6 +898,22 @@ export interface components {
         AnswerResponse: {
             /** Saved */
             saved: boolean;
+        };
+        /** AtRiskStudent */
+        AtRiskStudent: {
+            /** User Id */
+            user_id: number;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            /** Avg Score */
+            avg_score: number;
+            /**
+             * Last Attempt
+             * Format: date-time
+             */
+            last_attempt: string;
         };
         /** AttemptListResponse */
         AttemptListResponse: {
@@ -456,6 +948,24 @@ export interface components {
             finished_at: string | null;
             /** Category Name */
             category_name: string | null;
+        };
+        /** BookmarkListResponse */
+        BookmarkListResponse: {
+            /** Items */
+            items: components["schemas"]["BookmarkOut"][];
+            meta: components["schemas"]["routers__bookmarks__PaginationMeta"];
+        };
+        /** BookmarkOut */
+        BookmarkOut: {
+            /** Id */
+            id: number;
+            /** Question Id */
+            question_id: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /** BulkImportResponse */
         BulkImportResponse: {
@@ -494,6 +1004,34 @@ export interface components {
             /** Question Count */
             question_count?: number | null;
         };
+        /** ChangePasswordRequest */
+        ChangePasswordRequest: {
+            /**
+             * Current Password
+             * Format: password
+             */
+            current_password: string;
+            /**
+             * New Password
+             * Format: password
+             */
+            new_password: string;
+        };
+        /** DashboardStatsResponse */
+        DashboardStatsResponse: {
+            /** Total Students */
+            total_students: number;
+            /** Active Subscribers */
+            active_subscribers: number;
+            /** Total Questions */
+            total_questions: number;
+            /** Published Questions */
+            published_questions: number;
+            /** Total Attempts Today */
+            total_attempts_today: number;
+            /** Revenue This Month Cents */
+            revenue_this_month_cents: number;
+        };
         /**
          * Difficulty
          * @enum {string}
@@ -512,7 +1050,65 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
-        /** LoginRequest */
+        /** IPWhitelistCreateRequest */
+        IPWhitelistCreateRequest: {
+            /**
+             * Ip Cidr
+             * @example 203.0.113.0/24
+             */
+            ip_cidr: string;
+            /**
+             * Label
+             * @example Office Islamabad
+             */
+            label?: string | null;
+        };
+        /** IPWhitelistEntry */
+        IPWhitelistEntry: {
+            /** Id */
+            id: number;
+            /** Ip Cidr */
+            ip_cidr: string;
+            /** Label */
+            label: string | null;
+            /** Created By */
+            created_by: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** LoginLogOut */
+        LoginLogOut: {
+            /** Id */
+            id: number;
+            /** Ip Address */
+            ip_address: string | null;
+            /** Country Code */
+            country_code: string | null;
+            /** User Agent */
+            user_agent: string | null;
+            status: components["schemas"]["LoginStatus"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** LoginLogsResponse */
+        LoginLogsResponse: {
+            /** Items */
+            items: components["schemas"]["LoginLogOut"][];
+            meta: components["schemas"]["routers__users__PaginationMeta"];
+        };
+        /**
+         * LoginRequest
+         * @example {
+         *       "email": "sarah@example.com",
+         *       "password": "S3cur3P@ss!"
+         *     }
+         */
         LoginRequest: {
             /**
              * Email
@@ -522,10 +1118,15 @@ export interface components {
             email: string;
             /**
              * Password
-             * @example Secret123
+             * Format: password
              */
             password: string;
         };
+        /**
+         * LoginStatus
+         * @enum {string}
+         */
+        LoginStatus: "success" | "failed_password" | "failed_2fa" | "blocked_ip" | "blocked_geo" | "account_locked";
         /** LoginStep1Response */
         LoginStep1Response: {
             /**
@@ -543,6 +1144,66 @@ export interface components {
         MessageResponse: {
             /** Message */
             message: string;
+        };
+        /** PDFCreateRequest */
+        PDFCreateRequest: {
+            /**
+             * Title
+             * @example Cardiovascular Pharmacology Notes
+             */
+            title: string;
+            /** Description */
+            description?: string | null;
+            /** Category Id */
+            category_id: number;
+            /** Storage Url */
+            storage_url: string;
+            /**
+             * Sort Order
+             * @default 0
+             */
+            sort_order: number;
+        };
+        /** PDFListResponse */
+        PDFListResponse: {
+            /** Items */
+            items: components["schemas"]["PDFOut"][];
+            meta: components["schemas"]["routers__pdfs__PaginationMeta"];
+        };
+        /** PDFOut */
+        PDFOut: {
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+            /** Description */
+            description: string | null;
+            /** Category Id */
+            category_id: number;
+            /** Sort Order */
+            sort_order: number;
+            /** Is Published */
+            is_published: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** PDFUpdateRequest */
+        PDFUpdateRequest: {
+            /** Title */
+            title?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Category Id */
+            category_id?: number | null;
+            /** Storage Url */
+            storage_url?: string | null;
+            /** Sort Order */
+            sort_order?: number | null;
+            /** Is Published */
+            is_published?: boolean | null;
         };
         /**
          * QStatus
@@ -781,20 +1442,16 @@ export interface components {
         };
         /** RegisterRequest */
         RegisterRequest: {
-            /**
-             * Name
-             * @example Sarah Khan
-             */
+            /** Name */
             name: string;
             /**
              * Email
              * Format: email
-             * @example sarah@example.com
              */
             email: string;
             /**
              * Password
-             * @example Secret123
+             * Format: password
              */
             password: string;
         };
@@ -825,9 +1482,26 @@ export interface components {
             token: string;
             /**
              * New Password
-             * @example NewSecret456
+             * Format: password
              */
             new_password: string;
+        };
+        /** StudentAnalyticsResponse */
+        StudentAnalyticsResponse: {
+            /** User Id */
+            user_id: number;
+            /** Avg Score */
+            avg_score: number;
+            /** Total Attempts */
+            total_attempts: number;
+            /** Weak Areas */
+            weak_areas: components["schemas"]["WeakAreaRow"][];
+            /** Score Trend */
+            score_trend: {
+                [key: string]: unknown;
+            }[];
+            /** Is At Risk */
+            is_at_risk: boolean;
         };
         /** TokenResponse */
         TokenResponse: {
@@ -853,6 +1527,47 @@ export interface components {
              */
             otp: string;
         };
+        /** UpdateProfileRequest */
+        UpdateProfileRequest: {
+            /** Name */
+            name?: string | null;
+            /** Dark Mode */
+            dark_mode?: boolean | null;
+        };
+        /** UserListResponse */
+        UserListResponse: {
+            /** Items */
+            items: components["schemas"]["UserOut"][];
+            meta: components["schemas"]["routers__users__PaginationMeta"];
+        };
+        /** UserOut */
+        UserOut: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            role: components["schemas"]["UserRole"];
+            /** Is Verified */
+            is_verified: boolean;
+            /** Is Active */
+            is_active: boolean;
+            /** Dark Mode */
+            dark_mode: boolean;
+            /** Two Fa Enabled */
+            two_fa_enabled: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * UserRole
+         * @enum {string}
+         */
+        UserRole: "student" | "admin" | "reviewer";
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -865,6 +1580,159 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** VideoCreateRequest */
+        VideoCreateRequest: {
+            /**
+             * Title
+             * @example Cardiovascular Assessment
+             */
+            title: string;
+            /** Description */
+            description?: string | null;
+            /** Category Id */
+            category_id: number;
+            /**
+             * Storage Url
+             * @description Object storage path (not a public URL)
+             */
+            storage_url: string;
+            /** Thumbnail Url */
+            thumbnail_url?: string | null;
+            /** Duration Secs */
+            duration_secs?: number | null;
+            /**
+             * Sort Order
+             * @default 0
+             */
+            sort_order: number;
+        };
+        /** VideoListResponse */
+        VideoListResponse: {
+            /** Items */
+            items: components["schemas"]["VideoOut"][];
+            meta: components["schemas"]["routers__videos__PaginationMeta"];
+        };
+        /** VideoOut */
+        VideoOut: {
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+            /** Description */
+            description: string | null;
+            /** Category Id */
+            category_id: number;
+            /** Thumbnail Url */
+            thumbnail_url: string | null;
+            /** Duration Secs */
+            duration_secs: number | null;
+            /** Sort Order */
+            sort_order: number;
+            /** Is Published */
+            is_published: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** VideoProgressRequest */
+        VideoProgressRequest: {
+            /**
+             * Percent Watched
+             * @example 45.5
+             */
+            percent_watched: number;
+        };
+        /** VideoUpdateRequest */
+        VideoUpdateRequest: {
+            /** Title */
+            title?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Category Id */
+            category_id?: number | null;
+            /** Storage Url */
+            storage_url?: string | null;
+            /** Thumbnail Url */
+            thumbnail_url?: string | null;
+            /** Duration Secs */
+            duration_secs?: number | null;
+            /** Sort Order */
+            sort_order?: number | null;
+            /** Is Published */
+            is_published?: boolean | null;
+        };
+        /** VideoWithProgress */
+        VideoWithProgress: {
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+            /** Description */
+            description: string | null;
+            /** Category Id */
+            category_id: number;
+            /** Thumbnail Url */
+            thumbnail_url: string | null;
+            /** Duration Secs */
+            duration_secs: number | null;
+            /** Sort Order */
+            sort_order: number;
+            /** Is Published */
+            is_published: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Percent Watched */
+            percent_watched: number;
+            /** Stream Url */
+            stream_url: string;
+        };
+        /** WeakAreaRow */
+        WeakAreaRow: {
+            /** Category Name */
+            category_name: string;
+            /** Avg Score */
+            avg_score: number;
+            /** Attempt Count */
+            attempt_count: number;
+        };
+        /** PaginationMeta */
+        routers__announcements__PaginationMeta: {
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Per Page */
+            per_page: number;
+            /** Pages */
+            pages: number;
+        };
+        /** PaginationMeta */
+        routers__bookmarks__PaginationMeta: {
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Per Page */
+            per_page: number;
+            /** Pages */
+            pages: number;
+        };
+        /** PaginationMeta */
+        routers__pdfs__PaginationMeta: {
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Per Page */
+            per_page: number;
+            /** Pages */
+            pages: number;
         };
         /** PaginationMeta */
         routers__questions__PaginationMeta: {
@@ -915,6 +1783,28 @@ export interface components {
         routers__quizzes__QuestionOption: {
             /** Text */
             text: string;
+        };
+        /** PaginationMeta */
+        routers__users__PaginationMeta: {
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Per Page */
+            per_page: number;
+            /** Pages */
+            pages: number;
+        };
+        /** PaginationMeta */
+        routers__videos__PaginationMeta: {
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Per Page */
+            per_page: number;
+            /** Pages */
+            pages: number;
         };
     };
     responses: never;
@@ -1789,6 +2679,1047 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["QuizResumeResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_list_attempts_quizzes_admin__user_id__get: {
+        parameters: {
+            query?: {
+                page?: number;
+                per_page?: number;
+            };
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttemptListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_my_profile_users_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserOut"];
+                };
+            };
+        };
+    };
+    update_my_profile_users_me_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    change_password_users_me_change_password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_login_history_users_me_login_history_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                per_page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginLogsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_users_users_get: {
+        parameters: {
+            query?: {
+                role?: components["schemas"]["UserRole"] | null;
+                is_active?: boolean | null;
+                page?: number;
+                per_page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_user_users__user_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_update_user_users__user_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminUpdateUserRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_user_login_history_users__user_id__login_history_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                per_page?: number;
+            };
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginLogsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_bookmarks_bookmarks_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                per_page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookmarkListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_stats_admin_stats_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardStatsResponse"];
+                };
+            };
+        };
+    };
+    my_analytics_admin_analytics_me_get: {
+        parameters: {
+            query?: {
+                period?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentAnalyticsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    at_risk_students_admin_analytics_students_get: {
+        parameters: {
+            query?: {
+                threshold?: number;
+                consecutive?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AtRiskStudent"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    student_analytics_admin_analytics_students__user_id__get: {
+        parameters: {
+            query?: {
+                period?: string;
+            };
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudentAnalyticsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_ip_whitelist_admin_security_ip_whitelist_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IPWhitelistEntry"][];
+                };
+            };
+        };
+    };
+    add_ip_whitelist_admin_security_ip_whitelist_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IPWhitelistCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IPWhitelistEntry"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_ip_whitelist_admin_security_ip_whitelist__entry_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    force_logout_user_admin_security_sessions__user_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_announcements_announcements_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                per_page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnnouncementListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_announcement_announcements_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnnouncementCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnnouncementOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_announcement_announcements__announcement_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                announcement_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_announcement_announcements__announcement_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                announcement_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnnouncementUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnnouncementOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_pdfs_pdfs_get: {
+        parameters: {
+            query?: {
+                category_id?: number | null;
+                page?: number;
+                per_page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PDFListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_pdf_pdfs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PDFCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PDFOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_pdf_pdfs__pdf_id__download_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pdf_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_pdf_pdfs__pdf_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pdf_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_pdf_pdfs__pdf_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pdf_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PDFUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PDFOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_videos_videos_get: {
+        parameters: {
+            query?: {
+                category_id?: number | null;
+                page?: number;
+                per_page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_video_videos_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VideoCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_video_videos__video_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                video_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoWithProgress"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_video_videos__video_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                video_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_video_videos__video_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                video_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VideoUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VideoOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_video_progress_videos__video_id__progress_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                video_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VideoProgressRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
                 };
             };
             /** @description Validation Error */

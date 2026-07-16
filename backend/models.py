@@ -149,3 +149,96 @@ class QuizAttempt(Base):
     started_at       = Column(DateTime(timezone=True), server_default=func.now())
     finished_at      = Column(DateTime(timezone=True), nullable=True)
     created_at       = Column(DateTime(timezone=True), server_default=func.now())
+
+###########################
+# week 3
+###########################
+# ── Slice 4: Plans + Subscriptions (shapes needed for users/analytics) ─────
+# NOTE: Full subscription logic (Stripe webhooks, checkout) is Slice 7.
+# Adding the tables now because /subscriptions/check is called by
+# analytics and user profile endpoints in Slice 4 to gate access.
+
+class SubStatus(str, enum.Enum):
+    active    = "active"
+    grace     = "grace"
+    expired   = "expired"
+    cancelled = "cancelled"
+    pending   = "pending"
+
+class Plan(Base):
+    __tablename__ = "plans"
+    id            = Column(Integer, primary_key=True)
+    name          = Column(String(120), nullable=False)
+    price_cents   = Column(Integer, nullable=False)
+    currency      = Column(String(3), default="USD", nullable=False)
+    duration_days = Column(Integer, nullable=False)
+    description   = Column(Text, nullable=True)
+    is_active     = Column(Boolean, default=True, nullable=False)
+    created_at    = Column(DateTime(timezone=True), server_default=func.now())
+
+class Subscription(Base):
+    __tablename__ = "subscriptions"
+    id            = Column(Integer, primary_key=True)
+    user_id       = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    plan_id       = Column(Integer, ForeignKey("plans.id"), nullable=False)
+    status        = Column(PgEnum(SubStatus), default=SubStatus.pending, nullable=False)
+    start_date    = Column(DateTime(timezone=True), nullable=True)
+    end_date      = Column(DateTime(timezone=True), nullable=True)
+    grace_until   = Column(DateTime(timezone=True), nullable=True)
+    cancelled_at  = Column(DateTime(timezone=True), nullable=True)
+    created_at    = Column(DateTime(timezone=True), server_default=func.now())
+
+# ── Slice 5: Videos + PDFs + Announcements ───────────────────────────────
+
+class Video(Base):
+    __tablename__ = "videos"
+    id            = Column(Integer, primary_key=True)
+    title         = Column(String(255), nullable=False)
+    description   = Column(Text, nullable=True)
+    category_id   = Column(Integer, ForeignKey("categories.id"), nullable=True)
+    storage_url   = Column(String(500), nullable=False)  # R2/S3 object key
+    thumbnail_url = Column(String(500), nullable=True)
+    duration_secs = Column(Integer, nullable=True)
+    sort_order    = Column(Integer, default=0, nullable=False)
+    is_published  = Column(Boolean, default=False, nullable=False)
+    created_at    = Column(DateTime(timezone=True), server_default=func.now())
+
+class VideoProgress(Base):
+    __tablename__ = "video_progress"
+    id               = Column(Integer, primary_key=True)
+    user_id          = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    video_id         = Column(Integer, ForeignKey("videos.id"), nullable=False)
+    percent_watched  = Column(Integer, default=0, nullable=False)  # 0–100
+    last_watched_at  = Column(DateTime(timezone=True), server_default=func.now())
+    __table_args__   = (
+        __import__('sqlalchemy').UniqueConstraint('user_id', 'video_id', name='uq_video_progress'),
+    )
+
+class PDF(Base):
+    __tablename__ = "pdfs"
+    id            = Column(Integer, primary_key=True)
+    title         = Column(String(255), nullable=False)
+    description   = Column(Text, nullable=True)
+    category_id   = Column(Integer, ForeignKey("categories.id"), nullable=True)
+    storage_url   = Column(String(500), nullable=False)
+    sort_order    = Column(Integer, default=0, nullable=False)
+    is_published  = Column(Boolean, default=False, nullable=False)
+    created_at    = Column(DateTime(timezone=True), server_default=func.now())
+
+class Announcement(Base):
+    __tablename__ = "announcements"
+    id            = Column(Integer, primary_key=True)
+    title         = Column(String(255), nullable=False)
+    body          = Column(Text, nullable=False)
+    is_published  = Column(Boolean, default=False, nullable=False)
+    published_at  = Column(DateTime(timezone=True), nullable=True)
+    created_by    = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at    = Column(DateTime(timezone=True), server_default=func.now())
+
+class IPWhitelist(Base):
+    __tablename__ = "ip_whitelist"
+    id            = Column(Integer, primary_key=True)
+    ip_cidr       = Column(String(50), nullable=False)
+    label         = Column(String(120), nullable=True)
+    created_by    = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at    = Column(DateTime(timezone=True), server_default=func.now())

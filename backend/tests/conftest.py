@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from unittest.mock import patch
 
 load_dotenv()
 
@@ -20,6 +21,7 @@ _dev_url = os.getenv(
     "DATABASE_URL",
     "postgresql+asyncpg://postgres:password@localhost:5432/tricore",
 )
+
 TEST_DATABASE_URL = os.getenv(
     "TEST_DATABASE_URL",
     _dev_url.replace("/tricore", "/tricore_test")
@@ -158,3 +160,11 @@ async def admin_token(admin_user) -> str:
 
 def auth_headers(token: str) -> dict:
     return {"Authorization": f"Bearer {token}"}
+
+# Patch send_email for the entire test session
+# This ensures no real emails are ever sent during pytest
+# regardless of whether RESEND_API_KEY is set in .env
+@pytest.fixture(autouse=True, scope='session')
+def mock_email():
+    with patch('email_utils.send_email') as mock:
+        yield mock

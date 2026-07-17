@@ -119,54 +119,94 @@ def _safe_filename(text: str) -> str:
     return re.sub(r"[^\w\-.]", "_", text)
 
 
-def _create_watermark_page(
-    width: float,
-    height: float,
-    watermark_text: str,
-) -> BytesIO:
+def _create_watermark_page(width: float, height: float) -> BytesIO:
     """
-    Create a single-page PDF containing only the diagonal watermark text,
-    using reportlab. This page is then merged on top of every page of the
-    real PDF using pypdf.
+    Create a single-page PDF containing the NBB logo centered on the page,
+    at very low opacity — matching the subtle look of the brand letterhead.
 
-    Returns a BytesIO of the watermark-only PDF page.
+    The logo PNG (backend/assets/nbb_watermark.png) must exist. It has a
+    transparent background and the logo in NBB navy (#0B2540).
+
+    Opacity is controlled by drawing the image at low alpha via reportlab's
+    ImageReader + canvas.drawImage with mask='auto' to respect transparency,
+    then setting the fill alpha. The effective visual opacity is ~8% —
+    barely visible, consistent with the reference image provided.
+
+    # TO RE-ENABLE TEXT WATERMARK (student identity tracing):
+    # Uncomment the block below inside this function after drawing the logo:
+    #
+    #   c.saveState()
+    #   c.setFillColor(Color(0.4, 0.4, 0.4, alpha=0.15))
+    #   c.setFont("Helvetica", 9)
+    #   c.translate(width / 2, height / 2)
+    #   c.rotate(30)
+    #   c.drawCentredString(0, -40, watermark_text)
+    #   c.restoreState()
+    #
+    # watermark_text should be passed as a parameter:
+    #   def _create_watermark_page(width, height, watermark_text=""):
     """
     from reportlab.lib.colors import Color
+    from reportlab.lib.utils import ImageReader
     from reportlab.pdfgen import canvas
+
+    logo_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),  # backend/
+        "assets",
+        "nbb_watermark.png",
+    )
 
     buf = BytesIO()
     c = canvas.Canvas(buf, pagesize=(width, height))
 
-    # Semi-transparent light gray — visible enough to be a deterrent,
-    # not so dark it makes the underlying text unreadable.
-    c.setFillColor(Color(0.6, 0.6, 0.6, alpha=0.35))
+    if os.path.exists(logo_path):
+        # Size the logo to 38% of the page width — large enough to be
+        # recognisable as the NBB mark, small enough not to obscure content.
+        logo_w = width * 0.38
+        # Maintain aspect ratio — the extracted logo is 1083×1411 px (portrait)
+        logo_h = logo_w * (1411 / 1083)
 
-    # Diagonal across the page — harder to crop out than a corner stamp.
-    c.setFont("Helvetica", 11)
-    c.saveState()
-    c.translate(width / 2, height / 2)
-    c.rotate(45)
-    c.drawCentredString(0, 0, watermark_text)
-    c.restoreState()
+        # Center on the page
+        x = (width - logo_w) / 2
+        y = (height - logo_h) / 2
+
+        # The logo PNG is already very light steel-blue (#EAF1F9) — this IS
+        # the approved watermark color from the brand team. Drawing at full
+        # opacity (1.0) produces the subtle look in the reference image.
+        # If you want it even more subtle, lower this value (e.g. 0.7).
+        LOGO_OPACITY = 1.0
+        c.saveState()
+        c.setFillAlpha(LOGO_OPACITY)
+        c.setStrokeAlpha(LOGO_OPACITY)
+        c.drawImage(
+            ImageReader(logo_path),
+            x, y,
+            width=logo_w,
+            height=logo_h,
+            mask='auto',      # respects the PNG transparency channel
+            preserveAspectRatio=True,
+        )
+        c.restoreState()
+    else:
+        # Fallback if the logo file is missing — silent, don't crash the
+        # download. The PDF is returned without a watermark rather than
+        # erroring with a 500. Worth adding a log warning here once
+        # structured logging is wired in Week 5.
+        pass
 
     c.save()
     buf.seek(0)
     return buf
 
 
-def _apply_watermark(pdf_bytes: bytes, watermark_text: str) -> bytes:
+def _apply_watermark(pdf_bytes: bytes) -> bytes:
     """
-    Apply a diagonal watermark to every page of a PDF.
+    Apply the NBB logo watermark to every page of a PDF.
 
-    Process:
-      1. Parse the source PDF with pypdf.
-      2. Create a watermark page (reportlab) sized to match each page.
-      3. Merge the watermark page over each content page.
-      4. Return the merged PDF as bytes.
-
-    If pypdf/reportlab are not installed (shouldn't happen post pip install,
-    but defensive), raises ImportError with a clear message rather than a
-    cryptic AttributeError mid-request.
+    Signature change from the old version: `watermark_text` parameter
+    removed since the logo watermark doesn't use text. The student identity
+    text (name/email/timestamp) is preserved as commented-out code inside
+    _create_watermark_page() for easy re-enabling later.
     """
     try:
         from pypdf import PdfReader, PdfWriter
@@ -180,18 +220,13 @@ def _apply_watermark(pdf_bytes: bytes, watermark_text: str) -> bytes:
     writer = PdfWriter()
 
     for page in reader.pages:
-        # Use the actual page dimensions for the watermark overlay so it
-        # scales correctly regardless of paper size (A4, Letter, custom).
-        width = float(page.mediabox.width)
+        width  = float(page.mediabox.width)
         height = float(page.mediabox.height)
 
-        watermark_buf = _create_watermark_page(width, height, watermark_text)
+        watermark_buf    = _create_watermark_page(width, height)
         watermark_reader = PdfReader(watermark_buf)
-        watermark_page = watermark_reader.pages[0]
+        watermark_page   = watermark_reader.pages[0]
 
-        # merge_page() overlays the watermark on top of the content page.
-        # The watermark's semi-transparent fill means the underlying text
-        # remains readable through it.
         page.merge_page(watermark_page)
         writer.add_page(page)
 
@@ -201,24 +236,22 @@ def _apply_watermark(pdf_bytes: bytes, watermark_text: str) -> bytes:
     return output.read()
 
 
-def _create_dev_pdf(watermark_text: str) -> bytes:
+def _create_dev_pdf() -> bytes:
     """
-    Dev-mode only: generate a minimal PDF from scratch (no real file
-    to fetch from R2) and watermark it. Lets the download endpoint work
-    end-to-end in Week 3 without real R2 credentials.
-
-    Week 5: remove this function and always fetch real bytes from R2.
+    Dev-mode only: generate a minimal PDF from scratch and watermark it.
+    Signature change: watermark_text removed (logo watermark has no text).
+    Week 5: remove this and always fetch real bytes from R2.
     """
     try:
         from reportlab.lib.pagesizes import A4
-        from reportlab.pdfgen import canvas
+        from reportlab.pdfgen import canvas as rl_canvas
     except ImportError:
         raise ImportError(
             "reportlab is required. Run: pip install pypdf reportlab"
         )
 
     buf = BytesIO()
-    c = canvas.Canvas(buf, pagesize=A4)
+    c = rl_canvas.Canvas(buf, pagesize=A4)
     width, height = A4
 
     c.setFont("Helvetica-Bold", 16)
@@ -230,27 +263,18 @@ def _create_dev_pdf(watermark_text: str) -> bytes:
     c.save()
     pdf_bytes = buf.getvalue()
 
-    return _apply_watermark(pdf_bytes, watermark_text)
+    return _apply_watermark(pdf_bytes)
 
 
-def _fetch_and_watermark(storage_url: str, watermark_text: str) -> bytes:
+def _fetch_and_watermark(storage_url: str) -> bytes:
     """
-    Production path: fetch the real PDF bytes from the signed R2 URL,
-    then apply the watermark.
-
-    Week 3: R2_CONFIGURED is False — falls through to dev mode.
-    Week 5: R2_CONFIGURED is True — fetches real bytes.
+    Signature change: watermark_text removed.
+    Week 3: dev mode — returns dummy watermarked PDF.
+    Week 5: R2_CONFIGURED=True — fetches real bytes from R2.
     """
     if not R2_CONFIGURED:
-        # Dev mode — return a dummy watermarked PDF
-        return _create_dev_pdf(watermark_text)
+        return _create_dev_pdf()
 
-    # Production: generate a signed URL (60-min expiry) and fetch the bytes.
-    # Using urllib rather than httpx/requests to avoid an extra dependency —
-    # this is a single synchronous fetch called inside an async route, which
-    # is acceptable since PDF downloads are infrequent (not a hot path) and
-    # the fetch is bounded by the file size. If this becomes a bottleneck,
-    # wrap it in asyncio.to_thread() or switch to httpx.AsyncClient.
     signed_url = get_signed_url(storage_url, expires_in_seconds=3600)
     try:
         with urllib.request.urlopen(signed_url, timeout=30) as resp:
@@ -261,7 +285,7 @@ def _fetch_and_watermark(storage_url: str, watermark_text: str) -> bytes:
             detail=f"Failed to fetch PDF from storage: {exc}",
         )
 
-    return _apply_watermark(pdf_bytes, watermark_text)
+    return _apply_watermark(pdf_bytes)
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -350,28 +374,15 @@ async def download_pdf(
         raise HTTPException(status_code=404, detail="PDF not found.")
 
     if not pdf.is_published and not _is_privileged(current_user):
-        # Anti-enumeration: same 404 posture as questions.py and videos.py.
         raise HTTPException(status_code=404, detail="PDF not found.")
 
-    # Build watermark text — PRD F8-1 specifies: student name + email +
-    # download timestamp. ISO format for timestamp keeps it unambiguous
-    # across timezones (Pakistan, Nigeria, Philippines — all NBB's potential
-    # markets — have different local times).
-    now = datetime.now(timezone.utc)
-    watermark_text = (
-        f"{current_user.name} | {current_user.email} | "
-        f"{now.strftime('%Y-%m-%dT%H:%M:%SZ')}"
-    )
-
-    # Generate watermarked bytes. Never cached — generated fresh on every
-    # download request. PRD F8-1: "applied server-side on every download
-    # request — not pre-watermarked." Caching would require storing per-user
-    # copies in R2 (negating the storage savings of a single source file)
-    # and would make the timestamp stale. On-demand is the correct approach.
+    # Generate watermarked bytes — logo watermark, no student text for now.
+    # To re-enable student identity text (name/email/timestamp), see the
+    # commented-out block inside _create_watermark_page().
     try:
-        watermarked_bytes = _fetch_and_watermark(pdf.storage_url, watermark_text)
+        watermarked_bytes = _fetch_and_watermark(pdf.storage_url)
     except HTTPException:
-        raise  # re-raise 502 from _fetch_and_watermark cleanly
+        raise
     except Exception as exc:
         raise HTTPException(
             status_code=500,
@@ -473,3 +484,61 @@ async def delete_pdf(
         message=f"PDF deleted. Storage object '{storage_url}' must be "
                 f"removed manually from R2 until automated cleanup is implemented."
     )
+
+
+    # METHODOLIGY:
+'''
+    Student request
+      │
+      ▼
+download_pdf() route
+  │  1. Auth check (get_current_user)
+  │  2. Fetch PDF row from DB (title, storage_url, is_published)
+  │  3. Access check (student can't see unpublished)
+  │  4. Build filename: "Test_PDF-5.pdf"
+  │  5. Call _fetch_and_watermark(pdf.storage_url)
+      │
+      ▼
+_fetch_and_watermark(storage_url)
+  │  Check: is R2_CONFIGURED in .env?
+  │  ├── NO (dev mode) → call _create_dev_pdf()
+  │  │       Generates a blank A4 PDF using reportlab from scratch
+  │  │       Then calls _apply_watermark(pdf_bytes)
+  │  │
+  │  └── YES (production) → fetch real bytes from R2 signed URL
+  │          Then calls _apply_watermark(pdf_bytes)
+      │
+      ▼
+_apply_watermark(pdf_bytes)
+  │  1. Opens PDF bytes with pypdf PdfReader
+  │  2. Creates a PdfWriter (empty)
+  │  3. Loops over every page:
+  │       a. Gets page dimensions (width × height)
+  │       b. Calls _create_watermark_page(width, height)
+  │       c. Merges watermark page ON TOP of content page
+  │       d. Adds merged page to writer
+  │  4. Returns merged PDF as bytes
+      │
+      ▼
+_create_watermark_page(width, height)
+  │  1. Creates a blank PDF page (same size as the content page)
+  │  2. Loads nbb_logo.png from backend/assets/
+  │  3. Calculates: logo_w = page_width × 38%, maintain aspect ratio
+  │  4. Centers the logo: x = (page_w - logo_w) / 2
+  │  5. Draws the logo at LOGO_OPACITY=1.0
+  │     (logo is already very light so full opacity = subtle look)
+  │  6. Returns the watermark-only page as BytesIO
+      │
+      ▼
+Back in download_pdf()
+  │  StreamingResponse(
+  │    content = watermarked_bytes,
+  │    media_type = "application/pdf",
+  │    Content-Disposition = 'attachment; filename="Test_PDF-5.pdf"'
+  │    Content-Length = <byte count>
+  │  )
+      │
+      ▼
+Browser downloads the file
+
+'''

@@ -404,14 +404,18 @@ async def test_download_pdf_filename_contains_user_id(
     assert str(student_user.id) in disposition
 
 
-async def test_download_pdf_two_users_different_watermarks(
+async def test_download_pdf_two_users_different_filenames(
     client: AsyncClient, db: AsyncSession,
     student_user, admin_user, student_token: str, admin_token: str
 ):
     """
-    Different users get different Content-Disposition filenames (user_id
-    in filename). Watermark text difference is verified manually
-    (Day 6 checklist) since it requires opening a real PDF viewer.
+    Different users get different Content-Disposition filenames because
+    the filename includes user_id (e.g. Test_PDF-1.pdf vs Test_PDF-2.pdf).
+
+    NOTE: With the logo watermark, the PDF bytes themselves are now IDENTICAL
+    for all users (same logo, no per-user text). The per-user differentiation
+    is in the filename only. If student identity tracing is re-enabled
+    (see _create_watermark_page comments), bytes will differ again.
     """
     from unittest.mock import patch
 

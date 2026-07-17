@@ -128,6 +128,7 @@ dependencies = [
     { name = "pyyaml" },
     { name = "reportlab" },
     { name = "requests" },
+    { name = "resend" },
     { name = "rsa" },
     { name = "six" },
     { name = "sqlalchemy", extra = ["asyncio"] },
@@ -187,6 +188,7 @@ requires-dist = [
     { name = "pyyaml", specifier = "==6.0.3" },
     { name = "reportlab", specifier = ">=5.0.0" },
     { name = "requests", specifier = "==2.34.2" },
+    { name = "resend", specifier = ">=2.33.0" },
     { name = "rsa", specifier = "==4.9.1" },
     { name = "six", specifier = "==1.17.0" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = "==2.0.51" },
@@ -910,6 +912,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ac/c3/e2a2b89f2d3e2179abd6d00ebd70bff6273f37fb3e0cc209f48b39d00cbf/requests-2.34.2.tar.gz", hash = "sha256:f288924cae4e29463698d6d60bc6a4da69c89185ad1e0bcc4104f584e960b9ed", size = 142856, upload-time = "2026-05-14T19:25:27.735Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a0/f4/c67b0b3f1b9245e8d266f0f112c500d50e5b4e83cb6f3b71b6528104182a/requests-2.34.2-py3-none-any.whl", hash = "sha256:2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0", size = 73075, upload-time = "2026-05-14T19:25:26.443Z" },
+]
+
+[[package]]
+name = "resend"
+version = "2.33.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/1d/fd/6833d1146ed294e838fffcc1478f624ccee8ed90bd33ae20dcdaeb8c46b4/resend-2.33.0.tar.gz", hash = "sha256:860619a366a51e556b99c80a4f5d909c798d84968cb895fb569e89b70ebe5a86", size = 49442, upload-time = "2026-07-13T18:44:44.226Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cb/65/7bc28462421359f88d3d58dbdddc70034a6952a9dd0905de906296207b00/resend-2.33.0-py2.py3-none-any.whl", hash = "sha256:c63088e6bfd4a869bff418164dbb73e9fef0d00297db52f9b4a7142173057cc8", size = 79152, upload-time = "2026-07-13T18:44:42.912Z" },
 ]
 
 [[package]]

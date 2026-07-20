@@ -63,7 +63,10 @@ export default function DashboardPage() {
       {data && data.items.length > 0 && (
         <ul style={{ display: "grid", gap: 12, padding: 0, listStyle: "none" }}>
           {data.items.map((a) => {
-            const inProgress = a.status === "in_progress";
+            const badge = statusBadge(a.status);
+            const isCompleted = a.status === "completed";
+            const isInProgress = a.status === "in_progress";
+
             return (
               <li
                 key={a.attempt_id}
@@ -76,22 +79,22 @@ export default function DashboardPage() {
                       fontSize: 12,
                       padding: "2px 8px",
                       borderRadius: 999,
-                      background: inProgress ? "#fff4e5" : "#e8f5e9",
-                      color: inProgress ? "#b26a00" : "#2e7d32",
+                      background: badge.bg,
+                      color: badge.color,
                     }}
                   >
-                    {inProgress ? "In progress" : "Completed"}
+                    {badge.label}
                   </span>
                 </div>
 
                 <div style={{ fontSize: 14, color: "#666", marginTop: 4 }}>
-                  {inProgress ? (
-                    <>{a.total_questions} questions</>
-                  ) : (
+                  {isCompleted ? (
                     <>
                       Score: {a.score ?? "—"}% · {a.correct_count ?? 0}/
                       {a.total_questions} correct
                     </>
+                  ) : (
+                    <>{a.total_questions} questions</>
                   )}
                 </div>
 
@@ -99,14 +102,23 @@ export default function DashboardPage() {
                   Started: {new Date(a.started_at).toLocaleString()}
                 </div>
 
-                {inProgress && (
+                {(isInProgress || isCompleted) && (
                   <div style={{ marginTop: 8 }}>
-                    <Link
-                      href={`/quiz/${a.attempt_id}`}
-                      style={{ fontSize: 13, color: "#0B2540" }}
-                    >
-                      Resume →
-                    </Link>
+                    {isInProgress ? (
+                      <Link
+                        href={`/quiz/${a.attempt_id}`}
+                        style={{ fontSize: 13, color: "#0B2540" }}
+                      >
+                        Resume →
+                      </Link>
+                    ) : (
+                      <Link
+                        href={`/quiz/${a.attempt_id}/result`}
+                        style={{ fontSize: 13, color: "#0B2540" }}
+                      >
+                        View results →
+                      </Link>
+                    )}
                   </div>
                 )}
               </li>
@@ -116,4 +128,23 @@ export default function DashboardPage() {
       )}
     </main>
   );
+}
+
+function statusBadge(status: string): {
+  label: string;
+  bg: string;
+  color: string;
+} {
+  switch (status) {
+    case "in_progress":
+      return { label: "In progress", bg: "#fff4e5", color: "#b26a00" };
+    case "completed":
+      return { label: "Completed", bg: "#e8f5e9", color: "#2e7d32" };
+    case "timed_out":
+      return { label: "Timed out", bg: "#fdecea", color: "#c62828" };
+    case "abandoned":
+      return { label: "Abandoned", bg: "#f0f0f0", color: "#777" };
+    default:
+      return { label: status, bg: "#f0f0f0", color: "#777" };
+  }
 }

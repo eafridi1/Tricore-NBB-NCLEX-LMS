@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useResumeQuiz, interpretResume } from "@/hooks/use-resume-quiz";
 import { useQuizQuestion } from "@/hooks/use-quiz-question";
 import { useAnswerQuestion } from "@/hooks/use-answer-question";
 import { useFinishQuiz } from "@/hooks/use-finish-quiz";
@@ -13,7 +15,64 @@ export default function QuizPage() {
   const params = useParams();
   const attemptId = Number(params.attemptId);
 
-  const [index, setIndex] = useState(0);
+  const resumeQuery = useResumeQuiz(attemptId);
+  const resume = interpretResume(
+    resumeQuery.isLoading,
+    resumeQuery.isError,
+    resumeQuery.error,
+    resumeQuery.data
+  );
+
+  // ── Gate on resume state ──────────────────────────────────────
+  if (resume.kind === "loading") return <Centered>Loading quiz…</Centered>;
+
+  if (resume.kind === "error")
+    return (
+      <Centered>
+        <span style={{ color: "crimson" }}>{resume.message}</span>
+      </Centered>
+    );
+
+  if (resume.kind === "ended")
+    return (
+      <Centered>
+        <div>
+          <h2>This attempt has ended</h2>
+          <p style={{ color: "#666" }}>
+            {resume.reason === "session_expired"
+              ? "The time limit for this quiz has passed."
+              : "This quiz is no longer in progress."}
+          </p>
+          <p style={{ marginTop: 16 }}>
+            <Link href="/dashboard" style={{ color: "#0B2540" }}>
+              ← Back to dashboard
+            </Link>
+          </p>
+        </div>
+      </Centered>
+    );
+
+  // resume.kind === "resumable" — hand off to the live quiz UI,
+  // starting at the first unanswered question.
+  return (
+    <ActiveQuiz
+      attemptId={attemptId}
+      startIndex={Math.min(
+        resume.data.answered_count,
+        Math.max(0, resume.data.total_questions - 1)
+      )}
+    />
+  );
+}
+
+function ActiveQuiz({
+  attemptId,
+  startIndex,
+}: {
+  attemptId: number;
+  startIndex: number;
+}) {
+  const [index, setIndex] = useState(startIndex);
   const [selected, setSelected] = useState<number | null>(null);
   const [result, setResult] = useState<QuizResultResponse | null>(null);
 
@@ -25,10 +84,7 @@ export default function QuizPage() {
     if (q) setSelected(q.already_answered ?? null);
   }, [q]);
 
-  // ── Results view ──────────────────────────────────────────────
-  if (result) {
-    return <QuizResults result={result} />;
-  }
+  if (result) return <QuizResults result={result} />;
 
   if (isLoading) return <Centered>Loading question…</Centered>;
   if (isError)
@@ -45,16 +101,12 @@ export default function QuizPage() {
 
   function handleNext() {
     if (!q || selected === null) return;
-
     answer.mutate(
       { question_id: q.question_id, chosen_index: selected },
       {
         onSuccess: () => {
           if (isLast) {
-            // All answered — finish and capture the result.
-            finish.mutate(undefined, {
-              onSuccess: (res) => setResult(res),
-            });
+            finish.mutate(undefined, { onSuccess: (res) => setResult(res) });
           } else {
             setIndex((i) => i + 1);
           }
@@ -120,14 +172,17 @@ export default function QuizPage() {
 
       {(answer.isError || finish.isError) && (
         <p style={{ color: "crimson", marginTop: 12 }}>
-          Could not save. Please try again.
+          Could not save. This attempt may have expired —{" "}
+          <Link href="/dashboard" style={{ color: "#0B2540" }}>
+            back to dashboard
+          </Link>
+          .
         </p>
       )}
     </main>
   );
 }
 
-// ── Results component ───────────────────────────────────────────
 function QuizResults({ result }: { result: QuizResultResponse }) {
   return (
     <main style={{ maxWidth: 720, margin: "40px auto", fontFamily: "system-ui" }}>
@@ -223,9 +278,9 @@ function QuizResults({ result }: { result: QuizResultResponse }) {
       </div>
 
       <div style={{ marginTop: 28 }}>
-        <a href="/dashboard" style={{ color: "#0B2540" }}>
+        <Link href="/dashboard" style={{ color: "#0B2540" }}>
           ← Back to dashboard
-        </a>
+        </Link>
       </div>
     </main>
   );

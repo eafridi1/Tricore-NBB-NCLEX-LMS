@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useResumeQuiz, interpretResume } from "@/hooks/use-resume-quiz";
 import { useQuizQuestion } from "@/hooks/use-quiz-question";
 import { useAnswerQuestion } from "@/hooks/use-answer-question";
 import { useFinishQuiz } from "@/hooks/use-finish-quiz";
-import type { components } from "@/types/api";
 import { QuizResults } from "@/components/quiz-results";
+import { isAxiosError } from "axios";
+import type { components } from "@/types/api";
 
 type QuizResultResponse = components["schemas"]["QuizResultResponse"];
 
@@ -24,7 +25,6 @@ export default function QuizPage() {
     resumeQuery.data
   );
 
-  // ── Gate on resume state ──────────────────────────────────────
   if (resume.kind === "loading") return <Centered>Loading quiz…</Centered>;
 
   if (resume.kind === "error")
@@ -53,8 +53,6 @@ export default function QuizPage() {
       </Centered>
     );
 
-  // resume.kind === "resumable" — hand off to the live quiz UI,
-  // starting at the first unanswered question.
   return (
     <ActiveQuiz
       attemptId={attemptId}
@@ -77,13 +75,47 @@ function ActiveQuiz({
   const [selected, setSelected] = useState<number | null>(null);
   const [result, setResult] = useState<QuizResultResponse | null>(null);
 
+  // Timer state: seconds remaining, or null if this quiz isn't timed.
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const autoFinishedRef = useRef(false);
+
   const { data: q, isLoading, isError, error } = useQuizQuestion(attemptId, index);
   const answer = useAnswerQuestion(attemptId);
   const finish = useFinishQuiz(attemptId);
 
+  // On each question load: reflect prior answer, and re-sync the timer to
+  // the server's authoritative time_remaining_secs (drift/pause-proof).
   useEffect(() => {
-    if (q) setSelected(q.already_answered ?? null);
+    if (q) {
+      setSelected(q.already_answered ?? null);
+      if (q.time_remaining_secs != null) {
+        setRemaining(q.time_remaining_secs);
+      }
+    }
   }, [q]);
+
+  // Auto-finish helper (used by both the countdown hitting 0 and a 409).
+  function autoFinish() {
+    if (autoFinishedRef.current) return;
+    autoFinishedRef.current = true;
+    finish.mutate(undefined, {
+      onSuccess: (res) => setResult(res),
+    });
+  }
+
+  // Countdown tick. Only runs for timed quizzes (remaining != null).
+  useEffect(() => {
+    if (remaining == null || result) return;
+    if (remaining <= 0) {
+      autoFinish();
+      return;
+    }
+    const t = setInterval(() => {
+      setRemaining((r) => (r == null ? r : r - 1));
+    }, 1000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remaining, result]);
 
   if (result) return <QuizResults result={result} />;
 
@@ -112,6 +144,16 @@ function ActiveQuiz({
             setIndex((i) => i + 1);
           }
         },
+        onError: (err) => {
+          // Time ran out at the moment of answering — finish and score.
+          if (
+            isAxiosError(err) &&
+            err.response?.status === 409 &&
+            !autoFinishedRef.current
+          ) {
+            autoFinish();
+          }
+        },
       }
     );
   }
@@ -124,9 +166,30 @@ function ActiveQuiz({
 
   return (
     <main style={{ maxWidth: 640, margin: "40px auto", fontFamily: "system-ui" }}>
-      <div style={{ fontSize: 13, color: "#666", marginBottom: 8 }}>
-        Question {q.question_index + 1} of {q.total_questions} · {q.category_name} ·{" "}
-        {q.difficulty}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 8,
+        }}
+      >
+        <div style={{ fontSize: 13, color: "#666" }}>
+          Question {q.question_index + 1} of {q.total_questions} · {q.category_name}{" "}
+          · {q.difficulty}
+        </div>
+        {remaining != null && (
+          <div
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              fontVariantNumeric: "tabular-nums",
+              color: remaining <= 30 ? "#c62828" : "#0B2540",
+            }}
+          >
+            {formatTime(remaining)}
+          </div>
+        )}
       </div>
 
       <h2 style={{ marginBottom: 20, lineHeight: 1.4 }}>{q.stem}</h2>
@@ -171,7 +234,7 @@ function ActiveQuiz({
         </button>
       </div>
 
-      {(answer.isError || finish.isError) && (
+      {(answer.isError || finish.isError) && !autoFinishedRef.current && (
         <p style={{ color: "crimson", marginTop: 12 }}>
           Could not save. This attempt may have expired —{" "}
           <Link href="/dashboard" style={{ color: "#0B2540" }}>
@@ -182,6 +245,13 @@ function ActiveQuiz({
       )}
     </main>
   );
+}
+
+function formatTime(secs: number): string {
+  const s = Math.max(0, secs);
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${m}:${r.toString().padStart(2, "0")}`;
 }
 
 function Centered({ children }: { children: React.ReactNode }) {

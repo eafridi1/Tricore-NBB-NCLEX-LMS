@@ -7,6 +7,7 @@ import { useResumeQuiz, interpretResume } from "@/hooks/use-resume-quiz";
 import { useQuizQuestion } from "@/hooks/use-quiz-question";
 import { useAnswerQuestion } from "@/hooks/use-answer-question";
 import { useFinishQuiz } from "@/hooks/use-finish-quiz";
+import { useBookmark } from "@/hooks/use-bookmark";
 import { QuizResults } from "@/components/quiz-results";
 import { isAxiosError } from "axios";
 import type { components } from "@/types/api";
@@ -74,27 +75,26 @@ function ActiveQuiz({
   const [index, setIndex] = useState(startIndex);
   const [selected, setSelected] = useState<number | null>(null);
   const [result, setResult] = useState<QuizResultResponse | null>(null);
+  const [bookmarked, setBookmarked] = useState(false);
 
-  // Timer state: seconds remaining, or null if this quiz isn't timed.
   const [remaining, setRemaining] = useState<number | null>(null);
   const autoFinishedRef = useRef(false);
 
   const { data: q, isLoading, isError, error } = useQuizQuestion(attemptId, index);
   const answer = useAnswerQuestion(attemptId);
   const finish = useFinishQuiz(attemptId);
+  const bookmark = useBookmark();
 
-  // On each question load: reflect prior answer, and re-sync the timer to
-  // the server's authoritative time_remaining_secs (drift/pause-proof).
   useEffect(() => {
     if (q) {
       setSelected(q.already_answered ?? null);
+      setBookmarked(q.is_bookmarked);
       if (q.time_remaining_secs != null) {
         setRemaining(q.time_remaining_secs);
       }
     }
   }, [q]);
 
-  // Auto-finish helper (used by both the countdown hitting 0 and a 409).
   function autoFinish() {
     if (autoFinishedRef.current) return;
     autoFinishedRef.current = true;
@@ -103,7 +103,6 @@ function ActiveQuiz({
     });
   }
 
-  // Countdown tick. Only runs for timed quizzes (remaining != null).
   useEffect(() => {
     if (remaining == null || result) return;
     if (remaining <= 0) {
@@ -116,6 +115,16 @@ function ActiveQuiz({
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [remaining, result]);
+
+  function toggleBookmark() {
+    if (!q || bookmark.isPending) return;
+    const next = !bookmarked;
+    setBookmarked(next); // optimistic
+    const mutation = next ? bookmark.add : bookmark.remove;
+    mutation.mutate(q.question_id, {
+      onError: () => setBookmarked(!next), // revert on failure
+    });
+  }
 
   if (result) return <QuizResults result={result} />;
 
@@ -145,7 +154,6 @@ function ActiveQuiz({
           }
         },
         onError: (err) => {
-          // Time ran out at the moment of answering — finish and score.
           if (
             isAxiosError(err) &&
             err.response?.status === 409 &&
@@ -178,18 +186,36 @@ function ActiveQuiz({
           Question {q.question_index + 1} of {q.total_questions} · {q.category_name}{" "}
           · {q.difficulty}
         </div>
-        {remaining != null && (
-          <div
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <button
+            onClick={toggleBookmark}
+            disabled={bookmark.isPending}
+            title={bookmarked ? "Remove bookmark" : "Bookmark this question"}
             style={{
-              fontSize: 14,
-              fontWeight: 600,
-              fontVariantNumeric: "tabular-nums",
-              color: remaining <= 30 ? "#c62828" : "#0B2540",
+              border: "none",
+              background: "none",
+              cursor: bookmark.isPending ? "default" : "pointer",
+              fontSize: 18,
+              lineHeight: 1,
+              color: bookmarked ? "#e0a800" : "#bbb",
+              padding: 0,
             }}
           >
-            {formatTime(remaining)}
-          </div>
-        )}
+            {bookmarked ? "★" : "☆"}
+          </button>
+          {remaining != null && (
+            <div
+              style={{
+                fontSize: 14,
+                fontWeight: 600,
+                fontVariantNumeric: "tabular-nums",
+                color: remaining <= 30 ? "#c62828" : "#0B2540",
+              }}
+            >
+              {formatTime(remaining)}
+            </div>
+          )}
+        </div>
       </div>
 
       <h2 style={{ marginBottom: 20, lineHeight: 1.4 }}>{q.stem}</h2>

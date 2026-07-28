@@ -19,7 +19,7 @@ export default function DashboardPage() {
   const { data, isLoading, isError, error } = useAttempts();
 
   if (session === "unauthenticated") {
-    return null; // redirect is in flight
+    return null;
   }
 
   return (
@@ -29,7 +29,7 @@ export default function DashboardPage() {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: 24,
+          marginBottom: 8,
         }}
       >
         <h1 style={{ margin: 0 }}>Your Quiz Attempts</h1>
@@ -47,6 +47,15 @@ export default function DashboardPage() {
           Start Quiz
         </Link>
       </div>
+
+      <nav style={{ display: "flex", gap: 16, marginBottom: 24, fontSize: 14 }}>
+        <Link href="/materials" style={{ color: "#0B2540" }}>
+          Study Materials
+        </Link>
+        <Link href="/announcements" style={{ color: "#0B2540" }}>
+          Announcements
+        </Link>
+      </nav>
 
       {isLoading && <p>Loading attempts…</p>}
 

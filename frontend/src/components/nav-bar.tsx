@@ -6,6 +6,7 @@ import { useLogout } from "@/hooks/use-logout";
 
 const links = [
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/analytics", label: "Analytics" },
   { href: "/materials", label: "Study Materials" },
   { href: "/announcements", label: "Announcements" },
 ];

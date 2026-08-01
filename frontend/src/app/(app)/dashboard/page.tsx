@@ -1,61 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useSession } from "@/components/session-provider";
 import { useAttempts } from "@/hooks/use-attempts";
 
 export default function DashboardPage() {
-  const session = useSession();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (session === "unauthenticated") {
-      router.replace("/login");
-    }
-  }, [session, router]);
-
   const { data, isLoading, isError, error } = useAttempts();
 
-  if (session === "unauthenticated") {
-    return null;
-  }
-
   return (
-    <main style={{ maxWidth: 640, margin: "60px auto", fontFamily: "system-ui" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 8,
-        }}
-      >
-        <h1 style={{ margin: 0 }}>Your Quiz Attempts</h1>
-        <Link
-          href="/quiz/start"
-          style={{
-            padding: "10px 16px",
-            background: "#0B2540",
-            color: "white",
-            borderRadius: 8,
-            textDecoration: "none",
-            fontSize: 14,
-          }}
-        >
-          Start Quiz
-        </Link>
-      </div>
-
-      <nav style={{ display: "flex", gap: 16, marginBottom: 24, fontSize: 14 }}>
-        <Link href="/materials" style={{ color: "#0B2540" }}>
-          Study Materials
-        </Link>
-        <Link href="/announcements" style={{ color: "#0B2540" }}>
-          Announcements
-        </Link>
-      </nav>
+    <main style={{ maxWidth: 640, margin: "40px auto", fontFamily: "system-ui", padding: "0 20px" }}>
+      <h1 style={{ marginBottom: 24 }}>Your Quiz Attempts</h1>
 
       {isLoading && <p>Loading attempts…</p>}
 

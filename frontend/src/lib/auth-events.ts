@@ -1,14 +1,26 @@
-type LogoutListener = () => void;
+type Listener = () => void;
 
-const listeners = new Set<LogoutListener>();
+const logoutListeners = new Set<Listener>();
+const loginListeners = new Set<Listener>();
 
-export function onLogout(listener: LogoutListener): () => void {
-  listeners.add(listener);
+export function onLogout(listener: Listener): () => void {
+  logoutListeners.add(listener);
   return () => {
-    listeners.delete(listener);
+    logoutListeners.delete(listener);
   };
 }
 
 export function emitLogout(): void {
-  listeners.forEach((listener) => listener());
+  logoutListeners.forEach((listener) => listener());
+}
+
+export function onLogin(listener: Listener): () => void {
+  loginListeners.add(listener);
+  return () => {
+    loginListeners.delete(listener);
+  };
+}
+
+export function emitLogin(): void {
+  loginListeners.forEach((listener) => listener());
 }

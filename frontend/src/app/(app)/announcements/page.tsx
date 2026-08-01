@@ -1,24 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useSession } from "@/components/session-provider";
 import { useAnnouncements } from "@/hooks/use-announcements";
 
 export default function AnnouncementsPage() {
-  const session = useSession();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (session === "unauthenticated") {
-      router.replace("/login");
-    }
-  }, [session, router]);
-
   const { data, isLoading, isError, error } = useAnnouncements();
-
-  if (session === "unauthenticated") return null;
 
   // Newest first, by published_at (falling back to created_at).
   const items = data?.items
@@ -30,20 +15,8 @@ export default function AnnouncementsPage() {
     : [];
 
   return (
-    <main style={{ maxWidth: 640, margin: "60px auto", fontFamily: "system-ui" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 24,
-        }}
-      >
-        <h1 style={{ margin: 0 }}>Announcements</h1>
-        <Link href="/dashboard" style={{ fontSize: 14, color: "#0B2540" }}>
-          ← Dashboard
-        </Link>
-      </div>
+    <main style={{ maxWidth: 640, margin: "40px auto", fontFamily: "system-ui", padding: "0 20px" }}>
+      <h1 style={{ marginBottom: 24 }}>Announcements</h1>
 
       {isLoading && <p>Loading announcements…</p>}
 

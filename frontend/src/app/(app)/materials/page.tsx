@@ -1,47 +1,20 @@
 "use client";
 
-import { useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useSession } from "@/components/session-provider";
 import { usePdfs } from "@/hooks/use-pdfs";
 import { useCategories } from "@/hooks/use-categories";
 import { useDownloadPdf } from "@/hooks/use-download-pdf";
 
 export default function MaterialsPage() {
-  const session = useSession();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (session === "unauthenticated") {
-      router.replace("/login");
-    }
-  }, [session, router]);
-
   const { data, isLoading, isError, error } = usePdfs();
   const { data: categories } = useCategories();
   const { download, downloadingId, error: downloadError } = useDownloadPdf();
-
-  if (session === "unauthenticated") return null;
 
   const categoryName = (id: number) =>
     categories?.find((c) => c.id === id)?.name ?? "General";
 
   return (
-    <main style={{ maxWidth: 640, margin: "60px auto", fontFamily: "system-ui" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 24,
-        }}
-      >
-        <h1 style={{ margin: 0 }}>Study Materials</h1>
-        <Link href="/dashboard" style={{ fontSize: 14, color: "#0B2540" }}>
-          ← Dashboard
-        </Link>
-      </div>
+    <main style={{ maxWidth: 640, margin: "40px auto", fontFamily: "system-ui", padding: "0 20px" }}>
+      <h1 style={{ marginBottom: 24 }}>Study Materials</h1>
 
       {isLoading && <p>Loading materials…</p>}
 

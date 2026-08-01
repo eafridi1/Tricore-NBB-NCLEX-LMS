@@ -2,6 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { apiClient } from "@/lib/api-client";
 import { setAccessToken } from "@/lib/token-store";
+import { emitLogin } from "@/lib/auth-events";
 import type { components } from "@/types/api";
 
 type TwoFAVerifyRequest = components["schemas"]["TwoFAVerifyRequest"];
@@ -23,7 +24,6 @@ export class TwoFAError extends Error {
   }
 }
 
-
 function mapTwoFAError(error: unknown): TwoFAError {
   if (isAxiosError(error) && error.response) {
     const detail: string = error.response.data?.detail ?? "";
@@ -42,7 +42,6 @@ function mapTwoFAError(error: unknown): TwoFAError {
   return new TwoFAError("unknown", "Something went wrong. Please try again.");
 }
 
-
 async function verify2fa(payload: TwoFAVerifyRequest): Promise<TokenResponse> {
   try {
     const { data } = await apiClient.post<TokenResponse>(
@@ -50,6 +49,7 @@ async function verify2fa(payload: TwoFAVerifyRequest): Promise<TokenResponse> {
       payload
     );
     setAccessToken(data.access_token);
+    emitLogin(); // notify SessionProvider that we're now authenticated
     return data;
   } catch (error) {
     throw mapTwoFAError(error);

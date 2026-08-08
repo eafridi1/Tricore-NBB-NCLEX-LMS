@@ -9,7 +9,7 @@ import os
 import secrets
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status, BackgroundTasks
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, EmailStr, Field, SecretStr
 from sqlalchemy import delete, select
@@ -211,7 +211,7 @@ def _clear_refresh_cookie(response: Response) -> None:
 # ── Routes ──────────────────────────────────────────────────────────────────
 
 @router.post("/register", response_model=RegisterResponse, status_code=201)
-async def register(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
+async def register(data: RegisterRequest, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
     existing = await db.scalar(select(User).where(User.email == data.email))
     if existing:
         # SECURITY NOTE: contract.py doesn't specify the duplicate-email
@@ -243,9 +243,10 @@ async def register(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
     db.add(user)
     await db.flush()  # populates user.id without committing yet
 
-    send_email(
+    background_tasks.add_task(
+        send_email,
         to=user.email,
-        subject="Verify your TriCore account",
+        subject="Verify your NBB account",
         body=(
             f"Hi {user.name},\n\n"
             f"Verify your email: http://localhost:3000/verify-email?token={verify_token}\n"
@@ -279,7 +280,7 @@ async def verify_email(token: str, db: AsyncSession = Depends(get_db)):
 
 @router.post("/resend-verification", response_model=MessageResponse)
 async def resend_verification(
-    data: ResendVerificationRequest, db: AsyncSession = Depends(get_db)
+    data: ResendVerificationRequest, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)
 ):
     user = await db.scalar(select(User).where(User.email == data.email))
 
@@ -290,9 +291,10 @@ async def resend_verification(
         user.verify_expires = datetime.now(timezone.utc) + timedelta(
             hours=VERIFY_TOKEN_EXPIRY_HOURS
         )
-        send_email(
+        background_tasks.add_task(
+            send_email,
             to=user.email,
-            subject="Verify your TriCore account",
+            subject="Verify your NBB account",
             body=(
                 f"Verify your email: "
                 f"http://localhost:3000/verify-email?token={user.verify_token}"
@@ -306,7 +308,7 @@ async def resend_verification(
 
 @router.post("/login", response_model=LoginStep1Response)
 async def login(
-    data: LoginRequest, request: Request, db: AsyncSession = Depends(get_db)
+    data: LoginRequest, request: Request, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)
 ):
     user = await db.scalar(select(User).where(User.email == data.email))
 
@@ -360,9 +362,10 @@ async def login(
     user.otp_expires = now + timedelta(minutes=OTP_EXPIRY_MINUTES)
     user.otp_attempts = 0
 
-    send_email(
+    background_tasks.add_task(
+        send_email,
         to=user.email,
-        subject="Your TriCore login code",
+        subject="Your NBB login code",
         body=f"Your 6-digit code is: {otp}\nExpires in {OTP_EXPIRY_MINUTES} minutes.",
     )
 
@@ -516,7 +519,7 @@ async def logout(
 
 @router.post("/forgot-password", response_model=MessageResponse)
 async def forgot_password(
-    data: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)
+    data: ForgotPasswordRequest, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)
 ):
     user = await db.scalar(select(User).where(User.email == data.email))
 
@@ -525,9 +528,10 @@ async def forgot_password(
         user.reset_expires = datetime.now(timezone.utc) + timedelta(
             hours=RESET_TOKEN_EXPIRY_HOURS
         )
-        send_email(
+        background_tasks.add_task(
+            send_email,
             to=user.email,
-            subject="Reset your TriCore password",
+            subject="Reset your NBB password",
             body=(
                 f"Reset your password: "
                 f"http://localhost:3000/reset-password?token={user.reset_token}\n"

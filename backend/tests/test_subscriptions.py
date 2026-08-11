@@ -141,3 +141,29 @@ async def test_update_plan_404_for_missing(
         "/subscriptions/plans/999999", json=body, headers=auth_headers(admin_token)
     )
     assert resp.status_code == 404
+
+    # ── Payment model (Slice 7 step 2) ────────────────────────────────────────────
+@pytest.mark.asyncio
+async def test_payment_row_can_be_created(
+    client: AsyncClient, db: AsyncSession, admin_user
+):
+    from models import Payment, PayMethod, PayStatus
+
+    payment = Payment(
+        user_id=admin_user.id,
+        subscription_id=None,
+        amount_cents=2999,
+        currency="USD",
+        method=PayMethod.stripe,
+        status=PayStatus.succeeded,
+        provider_ref="evt_test_123",
+    )
+    db.add(payment)
+    await db.flush()
+    await db.refresh(payment)
+
+    assert payment.id is not None
+    assert payment.method == PayMethod.stripe
+    assert payment.status == PayStatus.succeeded
+    assert payment.provider_ref == "evt_test_123"
+    assert payment.amount_cents == 2999

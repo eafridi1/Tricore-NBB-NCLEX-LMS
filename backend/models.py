@@ -165,6 +165,17 @@ class SubStatus(str, enum.Enum):
     cancelled = "cancelled"
     pending   = "pending"
 
+class PayMethod(str, enum.Enum):
+    stripe = "stripe"
+    paypal = "paypal"
+
+
+class PayStatus(str, enum.Enum):
+    pending   = "pending"
+    succeeded = "succeeded"
+    failed    = "failed"
+    refunded  = "refunded"
+
 class Plan(Base):
     __tablename__ = "plans"
     id            = Column(Integer, primary_key=True)
@@ -187,6 +198,18 @@ class Subscription(Base):
     grace_until   = Column(DateTime(timezone=True), nullable=True)
     cancelled_at  = Column(DateTime(timezone=True), nullable=True)
     created_at    = Column(DateTime(timezone=True), server_default=func.now())
+
+class Payment(Base):
+    __tablename__ = "payments"
+    id              = Column(Integer, primary_key=True)
+    user_id         = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    subscription_id = Column(Integer, ForeignKey("subscriptions.id"), nullable=True)
+    amount_cents    = Column(Integer, nullable=False)
+    currency        = Column(String(3), default="USD", nullable=False)
+    method          = Column(PgEnum(PayMethod), nullable=False)
+    status          = Column(PgEnum(PayStatus), default=PayStatus.pending, nullable=False)
+    provider_ref    = Column(String(255), nullable=True, index=True)
+    created_at      = Column(DateTime(timezone=True), server_default=func.now())    
 
 # ── Slice 5: Videos + PDFs + Announcements ───────────────────────────────
 

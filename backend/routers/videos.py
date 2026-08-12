@@ -26,7 +26,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
-from dependencies import get_current_user, require_admin
+from dependencies import get_current_user, require_admin, require_active_subscription
 from models import Category, User, UserRole, Video, VideoProgress
 from storage import get_signed_url
 
@@ -133,7 +133,7 @@ async def list_videos(
     page: int = 1,
     per_page: int = 20,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_active_subscription),
 ):
     # SUBSCRIPTION GUARD — same pattern as questions.py: full check deferred
     # to Slice 7 when the Subscription model is real. TODO(slice-7): add

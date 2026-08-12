@@ -283,3 +283,33 @@ async def test_me_returns_subscription_history(
 async def test_check_requires_auth(client: AsyncClient, db: AsyncSession):
     resp = await client.get("/subscriptions/check")  # no token
     assert resp.status_code == 401
+
+# ── Gating dependency (Slice 7 step 4) ────────────────────────────────────────
+@pytest.mark.asyncio
+async def test_gated_endpoint_blocks_student_without_subscription(
+    client: AsyncClient, db: AsyncSession, student_user, student_token: str
+):
+    # student, no subscription → 402 on gated videos list
+    resp = await client.get("/videos", headers=auth_headers(student_token))
+    assert resp.status_code == 402
+
+
+@pytest.mark.asyncio
+async def test_gated_endpoint_allows_student_with_active_sub(
+    client: AsyncClient, db: AsyncSession, student_user, student_token: str
+):
+    plan = await _seed_plan(db)
+    now = datetime.now(timezone.utc)
+    await _seed_subscription(db, student_user.id, plan.id, SubStatus.active, now + timedelta(days=10))
+
+    resp = await client.get("/videos", headers=auth_headers(student_token))
+    assert resp.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_gated_endpoint_allows_admin_bypass(
+    client: AsyncClient, db: AsyncSession, admin_user, admin_token: str
+):
+    # admin has no subscription but should bypass the gate
+    resp = await client.get("/videos", headers=auth_headers(admin_token))
+    assert resp.status_code == 200    

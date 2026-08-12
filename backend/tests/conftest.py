@@ -149,6 +149,35 @@ async def student_token(student_user) -> str:
     from auth_utils import create_access_token
     return create_access_token(student_user.id, student_user.role.value)
 
+@pytest_asyncio.fixture
+async def active_subscription(db: AsyncSession, student_user):
+    """An active subscription for the student, for tests that hit gated endpoints."""
+    from datetime import datetime, timedelta, timezone
+    from models import Plan, Subscription, SubStatus
+
+    plan = Plan(
+        name="Test Plan",
+        price_cents=2999,
+        currency="USD",
+        duration_days=30,
+        is_active=True,
+    )
+    db.add(plan)
+    await db.flush()
+
+    now = datetime.now(timezone.utc)
+    sub = Subscription(
+        user_id=student_user.id,
+        plan_id=plan.id,
+        status=SubStatus.active,
+        start_date=now - timedelta(days=1),
+        end_date=now + timedelta(days=29),
+    )
+    db.add(sub)
+    await db.flush()
+    await db.refresh(sub)
+    return sub
+
 
 @pytest_asyncio.fixture
 async def admin_token(admin_user) -> str:

@@ -227,7 +227,7 @@ async def test_published_announcement_appears_in_student_list(
 # ── GET /videos ───────────────────────────────────────────────────────────────
 
 async def test_list_videos_student_sees_published_only(
-    client: AsyncClient, db: AsyncSession, student_token: str
+    client: AsyncClient, db: AsyncSession, student_token: str, active_subscription
 ):
     cat = await _seed_category(db, "VideoTest")
     await _seed_video(db, cat.id, is_published=True)
@@ -252,7 +252,7 @@ async def test_list_videos_admin_sees_unpublished(
 
 
 async def test_list_videos_filter_by_category(
-    client: AsyncClient, db: AsyncSession, student_token: str
+    client: AsyncClient, db: AsyncSession, student_token: str, active_subscription
 ):
     cat1 = await _seed_category(db, "FilterVid1")
     cat2 = await _seed_category(db, "FilterVid2")
@@ -270,7 +270,7 @@ async def test_list_videos_filter_by_category(
 
 
 async def test_list_videos_empty_returns_valid_response(
-    client: AsyncClient, student_token: str
+    client: AsyncClient, student_token: str, active_subscription
 ):
     resp = await client.get("/videos", headers=auth_headers(student_token))
     assert resp.status_code == 200

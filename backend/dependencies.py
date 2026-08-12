@@ -53,3 +53,49 @@ async def require_admin_or_reviewer(current_user: User = Depends(get_current_use
             detail="Admin or reviewer access required.",
         )
     return current_user
+
+# ── Subscription gating (Slice 7 step 4) ──────────────────────────────────────
+# Enforces active-or-grace subscription for STUDENTS. Admins and reviewers
+# bypass (they manage content). Grace logic mirrors BR9 (end_date + 3 days)
+# and must stay consistent with _compute_access in routers/subscriptions.py.
+from datetime import datetime, timedelta, timezone
+from sqlalchemy import select
+from models import Subscription, SubStatus
+
+_GRACE_DAYS = 3  # BR9
+
+
+async def require_active_subscription(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    # Admins and reviewers are never gated — they manage content.
+    if current_user.role in (UserRole.admin, UserRole.reviewer):
+        return current_user
+
+    # Most recent subscription for this user.
+    result = await db.execute(
+        select(Subscription)
+        .where(Subscription.user_id == current_user.id)
+        .order_by(Subscription.created_at.desc())
+        .limit(1)
+    )
+    sub = result.scalar_one_or_none()
+
+    now = datetime.now(timezone.utc)
+    has_access = False
+    if (
+        sub is not None
+        and sub.status not in (SubStatus.pending, SubStatus.cancelled)
+        and sub.end_date is not None
+    ):
+        grace_end = sub.end_date + timedelta(days=_GRACE_DAYS)
+        if now <= grace_end:  # active window OR within 3-day grace
+            has_access = True
+
+    if not has_access:
+        raise HTTPException(
+            status_code=402,
+            detail="An active subscription is required to access this content.",
+        )
+    return current_user

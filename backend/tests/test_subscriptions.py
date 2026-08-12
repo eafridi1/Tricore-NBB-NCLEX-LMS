@@ -7,7 +7,9 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tests.conftest import auth_headers
-from models import Plan
+from models import Plan, Subscription, SubStatus
+from datetime import datetime, timedelta, timezone
+
 
 
 # ── helper ────────────────────────────────────────────────────────────────────
@@ -167,3 +169,117 @@ async def test_payment_row_can_be_created(
     assert payment.status == PayStatus.succeeded
     assert payment.provider_ref == "evt_test_123"
     assert payment.amount_cents == 2999
+
+
+    # ── Subscription check + grace logic (Slice 7 step 3) ─────────────────────────
+
+async def _seed_subscription(
+    db: AsyncSession,
+    user_id: int,
+    plan_id: int,
+    status: SubStatus,
+    end_date: datetime,
+):
+    sub = Subscription(
+        user_id=user_id,
+        plan_id=plan_id,
+        status=status,
+        start_date=end_date - timedelta(days=30),
+        end_date=end_date,
+    )
+    db.add(sub)
+    await db.flush()
+    await db.refresh(sub)
+    return sub
+
+
+@pytest.mark.asyncio
+async def test_check_no_subscription_denies_access(
+    client: AsyncClient, db: AsyncSession, student_user, student_token: str
+):
+    resp = await client.get("/subscriptions/check", headers=auth_headers(student_token))
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["has_access"] is False
+    assert data["status"] is None
+
+
+@pytest.mark.asyncio
+async def test_check_active_grants_access(
+    client: AsyncClient, db: AsyncSession, student_user, student_token: str
+):
+    plan = await _seed_plan(db)
+    now = datetime.now(timezone.utc)
+    await _seed_subscription(db, student_user.id, plan.id, SubStatus.active, now + timedelta(days=10))
+
+    resp = await client.get("/subscriptions/check", headers=auth_headers(student_token))
+    data = resp.json()
+    assert data["has_access"] is True
+    assert data["status"] == "active"
+    assert data["days_remaining"] >= 9  # ~10 days, allowing for clock
+
+
+@pytest.mark.asyncio
+async def test_check_within_grace_grants_access(
+    client: AsyncClient, db: AsyncSession, student_user, student_token: str
+):
+    plan = await _seed_plan(db)
+    now = datetime.now(timezone.utc)
+    # end_date was 1 day ago → inside the 3-day grace window
+    await _seed_subscription(db, student_user.id, plan.id, SubStatus.active, now - timedelta(days=1))
+
+    resp = await client.get("/subscriptions/check", headers=auth_headers(student_token))
+    data = resp.json()
+    assert data["has_access"] is True
+    assert data["status"] == "grace"
+
+
+@pytest.mark.asyncio
+async def test_check_past_grace_denies_access(
+    client: AsyncClient, db: AsyncSession, student_user, student_token: str
+):
+    plan = await _seed_plan(db)
+    now = datetime.now(timezone.utc)
+    # end_date was 5 days ago → past the 3-day grace window
+    await _seed_subscription(db, student_user.id, plan.id, SubStatus.active, now - timedelta(days=5))
+
+    resp = await client.get("/subscriptions/check", headers=auth_headers(student_token))
+    data = resp.json()
+    assert data["has_access"] is False
+    assert data["status"] == "expired"
+
+
+@pytest.mark.asyncio
+async def test_check_cancelled_denies_access(
+    client: AsyncClient, db: AsyncSession, student_user, student_token: str
+):
+    plan = await _seed_plan(db)
+    now = datetime.now(timezone.utc)
+    await _seed_subscription(db, student_user.id, plan.id, SubStatus.cancelled, now + timedelta(days=10))
+
+    resp = await client.get("/subscriptions/check", headers=auth_headers(student_token))
+    data = resp.json()
+    assert data["has_access"] is False
+    assert data["status"] == "cancelled"
+
+
+@pytest.mark.asyncio
+async def test_me_returns_subscription_history(
+    client: AsyncClient, db: AsyncSession, student_user, student_token: str
+):
+    plan = await _seed_plan(db)
+    now = datetime.now(timezone.utc)
+    await _seed_subscription(db, student_user.id, plan.id, SubStatus.active, now + timedelta(days=10))
+
+    resp = await client.get("/subscriptions/me", headers=auth_headers(student_token))
+    assert resp.status_code == 200
+    subs = resp.json()
+    assert len(subs) == 1
+    assert subs[0]["plan"]["id"] == plan.id  # nested plan present
+    assert subs[0]["status"] == "active"
+
+
+@pytest.mark.asyncio
+async def test_check_requires_auth(client: AsyncClient, db: AsyncSession):
+    resp = await client.get("/subscriptions/check")  # no token
+    assert resp.status_code == 401

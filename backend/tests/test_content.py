@@ -286,7 +286,7 @@ async def test_list_videos_requires_auth(client: AsyncClient):
 # ── POST /videos/{video_id}/progress ─────────────────────────────────────────
 
 async def test_video_progress_upsert_creates_row(
-    client: AsyncClient, db: AsyncSession, student_user, student_token: str
+    client: AsyncClient, db: AsyncSession, student_user, student_token: str, active_subscription
 ):
     cat = await _seed_category(db, "ProgressCat")
     video = await _seed_video(db, cat.id)
@@ -311,7 +311,7 @@ async def test_video_progress_upsert_creates_row(
 
 
 async def test_video_progress_upsert_second_call_updates_not_inserts(
-    client: AsyncClient, db: AsyncSession, student_user, student_token: str
+    client: AsyncClient, db: AsyncSession, student_user, student_token: str, active_subscription
 ):
     """Second call with different percent must UPDATE, not create a second row."""
     cat = await _seed_category(db, "UpsertCat")
@@ -349,7 +349,7 @@ async def test_video_progress_upsert_second_call_updates_not_inserts(
 
 
 async def test_video_progress_video_not_found(
-    client: AsyncClient, student_token: str
+    client: AsyncClient, student_token: str, active_subscription
 ):
     resp = await client.post(
         "/videos/99999/progress",
@@ -375,7 +375,7 @@ async def test_video_progress_requires_auth(
 # ── GET /admin/analytics/me ──────────────────────────────────────────────────
 
 async def test_analytics_me_returns_own_data(
-    client: AsyncClient, db: AsyncSession, student_user, admin_user, student_token: str
+    client: AsyncClient, db: AsyncSession, student_user, admin_user, student_token: str, active_subscription
 ):
     """After seeding a completed attempt, analytics/me returns real data."""
     cat = await _seed_category(db, "AnalyticsCat")
@@ -398,7 +398,7 @@ async def test_analytics_me_returns_own_data(
 
 
 async def test_analytics_me_no_attempts_returns_zeros(
-    client: AsyncClient, student_token: str
+    client: AsyncClient, student_token: str, active_subscription
 ):
     resp = await client.get(
         "/admin/analytics/me",
@@ -417,7 +417,7 @@ async def test_analytics_me_requires_auth(client: AsyncClient):
 
 
 async def test_analytics_me_period_filter(
-    client: AsyncClient, db: AsyncSession, student_user, admin_user, student_token: str
+    client: AsyncClient, db: AsyncSession, student_user, admin_user, student_token: str, active_subscription
 ):
     """period=weekly should only include recent attempts — basic shape check."""
     cat = await _seed_category(db, "PeriodCat")

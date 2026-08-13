@@ -38,7 +38,7 @@ from analytics import (
     get_weak_areas,
 )
 from database import get_db
-from dependencies import get_current_user, require_admin
+from dependencies import get_current_user, require_active_subscription, require_admin
 from models import (
     AttemptStatus,
     IPWhitelist,
@@ -280,7 +280,7 @@ async def admin_stats(
 async def my_analytics(
     period: str = "all",
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),  # any auth user, not admin-only
+    current_user: User = Depends(require_active_subscription),  # any auth user, not admin-only
 ):
     # CONTRACT NOTE: the contract places this route under /admin prefix
     # even though it's NOT admin-only ("Student: view own performance

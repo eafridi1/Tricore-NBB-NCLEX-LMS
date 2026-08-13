@@ -39,7 +39,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
-from dependencies import get_current_user, require_admin
+from dependencies import get_current_user, require_admin, require_active_subscription
 from models import Category, PDF, User, UserRole
 from storage import get_signed_url, R2_CONFIGURED
 
@@ -290,7 +290,7 @@ async def list_pdfs(
     page: int = 1,
     per_page: int = 20,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_active_subscription),
 ):
     # SUBSCRIPTION GUARD — deferred to Slice 7. TODO(slice-7): add active
     # subscription check for student role.
@@ -331,7 +331,7 @@ async def list_pdfs(
 async def download_pdf(
     pdf_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_active_subscription),
 ):
     """
     Returns watermarked PDF bytes as a StreamingResponse.

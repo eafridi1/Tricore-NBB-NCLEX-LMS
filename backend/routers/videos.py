@@ -176,7 +176,7 @@ async def list_videos(
 async def get_video(
     video_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_active_subscription),
 ):
     video = await db.get(Video, video_id)
 
@@ -226,7 +226,7 @@ async def update_video_progress(
     video_id: int,
     data: VideoProgressRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_active_subscription),
 ):
     video = await db.get(Video, video_id)
     if not video:

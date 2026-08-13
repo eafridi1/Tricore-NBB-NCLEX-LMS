@@ -79,7 +79,7 @@ async def _seed_attempt(
 # ── POST /quizzes ─────────────────────────────────────────────────────────────
 
 async def test_start_quiz_success(
-    client: AsyncClient, db: AsyncSession, admin_user, student_user, student_token
+    client: AsyncClient, db: AsyncSession, admin_user, student_user, student_token, active_subscription
 ):
     cat = await _seed_category(db, "StartQuiz")
     for _ in range(5):
@@ -98,7 +98,7 @@ async def test_start_quiz_success(
 
 
 async def test_start_quiz_uses_available_count_when_fewer_questions(
-    client: AsyncClient, db: AsyncSession, admin_user, student_user, student_token
+    client: AsyncClient, db: AsyncSession, admin_user, student_user, student_token, active_subscription
 ):
     cat = await _seed_category(db, "FewQ")
     for _ in range(3):
@@ -114,7 +114,7 @@ async def test_start_quiz_uses_available_count_when_fewer_questions(
 
 
 async def test_start_quiz_filters_by_category(
-    client: AsyncClient, db: AsyncSession, admin_user, student_user, student_token
+    client: AsyncClient, db: AsyncSession, admin_user, student_user, student_token, active_subscription
 ):
     cat1 = await _seed_category(db, "QuizCat1")
     cat2 = await _seed_category(db, "QuizCat2")
@@ -135,7 +135,7 @@ async def test_start_quiz_filters_by_category(
 
 
 async def test_start_quiz_409_if_in_progress_exists(
-    client: AsyncClient, db: AsyncSession, admin_user, student_user, student_token
+    client: AsyncClient, db: AsyncSession, admin_user, student_user, student_token, active_subscription
 ):
     cat = await _seed_category(db, "InProgress")
     q = await _seed_question(db, cat.id, admin_user.id)
@@ -152,7 +152,7 @@ async def test_start_quiz_409_if_in_progress_exists(
 
 
 async def test_start_quiz_timed_requires_time_limit(
-    client: AsyncClient, student_token: str
+    client: AsyncClient, student_token: str, active_subscription
 ):
     resp = await client.post("/quizzes", json={
         "question_count": 5, "timed": True,
@@ -161,7 +161,7 @@ async def test_start_quiz_timed_requires_time_limit(
 
 
 async def test_start_quiz_no_matching_questions_422(
-    client: AsyncClient, db: AsyncSession, student_token: str
+    client: AsyncClient, db: AsyncSession, student_token: str, active_subscription
 ):
     cat = await _seed_category(db, "EmptyCat")
     resp = await client.post("/quizzes", json={
@@ -171,7 +171,7 @@ async def test_start_quiz_no_matching_questions_422(
 
 
 async def test_start_quiz_excludes_soft_deleted(
-    client: AsyncClient, db: AsyncSession, admin_user, student_user, student_token
+    client: AsyncClient, db: AsyncSession, admin_user, student_user, student_token, active_subscription
 ):
     cat = await _seed_category(db, "SoftDelQuiz")
     live = await _seed_question(db, cat.id, admin_user.id)

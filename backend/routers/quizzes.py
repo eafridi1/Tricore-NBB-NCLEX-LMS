@@ -24,7 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import cast, literal
 
 from database import get_db
-from dependencies import get_current_user, require_admin
+from dependencies import get_current_user, require_active_subscription, require_admin
 from models import AttemptStatus, Bookmark, Category, Difficulty, Question, QStatus, QuizAttempt, User
 
 router = APIRouter()
@@ -171,7 +171,7 @@ AT_RISK_THRESHOLD = 60.0
 async def start_quiz(
     data: QuizStartRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_active_subscription),
 ):
     # VALIDATION NOT IN THE CONTRACT SHAPE: QuizStartRequest's
     # time_limit_secs is Optional regardless of `timed`, so Pydantic alone

@@ -304,7 +304,7 @@ async def test_delete_video_student_forbidden(
 # ── GET /pdfs ─────────────────────────────────────────────────────────────────
 
 async def test_list_pdfs_student_sees_published_only(
-    client: AsyncClient, db: AsyncSession, student_token: str
+    client: AsyncClient, db: AsyncSession, student_token: str, active_subscription
 ):
     cat = await _seed_category(db, "PDFListCat")
     published = await _seed_pdf(db, cat.id, is_published=True)
@@ -329,7 +329,7 @@ async def test_list_pdfs_admin_sees_unpublished(
 
 
 async def test_list_pdfs_filter_by_category(
-    client: AsyncClient, db: AsyncSession, student_token: str
+    client: AsyncClient, db: AsyncSession, student_token: str, active_subscription
 ):
     cat1 = await _seed_category(db, "PDFFilterCat1")
     cat2 = await _seed_category(db, "PDFFilterCat2")
@@ -354,7 +354,7 @@ async def test_list_pdfs_requires_auth(client: AsyncClient):
 # ── GET /pdfs/{id}/download ───────────────────────────────────────────────────
 
 async def test_download_pdf_returns_pdf_bytes(
-    client: AsyncClient, db: AsyncSession, student_token: str
+    client: AsyncClient, db: AsyncSession, student_token: str, active_subscription
 ):
     """
     PDF download returns actual PDF bytes with correct headers.
@@ -384,7 +384,7 @@ async def test_download_pdf_returns_pdf_bytes(
 
 
 async def test_download_pdf_filename_contains_user_id(
-    client: AsyncClient, db: AsyncSession, student_user, student_token: str
+    client: AsyncClient, db: AsyncSession, student_user, student_token: str, active_subscription
 ):
     from unittest.mock import patch
 
@@ -406,7 +406,7 @@ async def test_download_pdf_filename_contains_user_id(
 
 async def test_download_pdf_two_users_different_watermarks(
     client: AsyncClient, db: AsyncSession,
-    student_user, admin_user, student_token: str, admin_token: str
+    student_user, admin_user, student_token: str, admin_token: str, active_subscription
 ):
     """
     Different users get different Content-Disposition filenames (user_id
@@ -440,7 +440,7 @@ async def test_download_pdf_two_users_different_watermarks(
 
 
 async def test_download_pdf_unpublished_student_gets_404(
-    client: AsyncClient, db: AsyncSession, student_token: str
+    client: AsyncClient, db: AsyncSession, student_token: str, active_subscription
 ):
     cat = await _seed_category(db, "UnpubPDFCat")
     pdf = await _seed_pdf(db, cat.id, is_published=False)
@@ -452,7 +452,7 @@ async def test_download_pdf_unpublished_student_gets_404(
     assert resp.status_code == 404
 
 
-async def test_download_pdf_not_found(client: AsyncClient, student_token: str):
+async def test_download_pdf_not_found(client: AsyncClient, student_token: str, active_subscription):
     resp = await client.get("/pdfs/99999/download", headers=auth_headers(student_token))
     assert resp.status_code == 404
 

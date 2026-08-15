@@ -12,6 +12,7 @@ from routers import videos as videos_router
 from routers import announcements as announcements_router
 from routers import subscriptions as subscriptions_router
 import os
+from routers import payments as payments_router
 
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
 
@@ -38,6 +39,7 @@ app.include_router(announcements_router.router, prefix="/announcements", tags=["
 app.include_router(pdfs_router.router, prefix="/pdfs", tags=["pdfs"])
 app.include_router(videos_router.router, prefix="/videos", tags=["videos"])
 app.include_router(subscriptions_router.router, prefix="/subscriptions", tags=["subscriptions"])
+app.include_router(payments_router.router, prefix="/payments", tags=["payments"])
 
 
 @app.get("/health")

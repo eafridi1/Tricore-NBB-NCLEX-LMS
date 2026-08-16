@@ -17,10 +17,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from database import get_db
 from dependencies import get_current_user
 from models import Plan, Subscription, SubStatus, User
+from datetime import datetime, timedelta, timezone
+from models import Payment, PayMethod, PayStatus
 
 
 router = APIRouter()
@@ -28,6 +29,7 @@ router = APIRouter()
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 SUCCESS_URL = os.getenv("STRIPE_SUCCESS_URL", "http://localhost:3000/subscription/success")
 CANCEL_URL = os.getenv("STRIPE_CANCEL_URL", "http://localhost:3000/subscription/cancel")
+WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 
 
 # ── Schemas (from contract) ───────────────────────────────────────────────────
@@ -100,3 +102,118 @@ async def stripe_checkout(
         checkout_url=session.url,
         session_id=session.id,
     )
+# ── Webhook helpers ───────────────────────────────────────────────────────────
+async def _grant_access_from_session(db: AsyncSession, session: dict) -> None:
+    """
+    Idempotently grant access for a completed checkout session.
+    Writes a Subscription (active) + Payment (succeeded), keyed on the
+    Stripe session id (provider_ref) so repeated deliveries don't double-grant.
+    """
+    session_id = session.get("id")
+    metadata = session.get("metadata") or {}
+    user_id = metadata.get("user_id")
+    plan_id = metadata.get("plan_id")
+
+    # Without metadata we can't link the payment — skip safely.
+    if not (session_id and user_id and plan_id):
+        return
+
+    # IDEMPOTENCY: if we've already recorded this session, do nothing.
+    existing = await db.execute(
+        select(Payment).where(Payment.provider_ref == session_id).limit(1)
+    )
+    if existing.scalar_one_or_none() is not None:
+        return
+
+    plan = await db.get(Plan, int(plan_id))
+    if plan is None:
+        return
+
+    now = datetime.now(timezone.utc)
+    sub = Subscription(
+        user_id=int(user_id),
+        plan_id=plan.id,
+        status=SubStatus.active,
+        start_date=now,
+        end_date=now + timedelta(days=plan.duration_days),
+    )
+    db.add(sub)
+    await db.flush()  # get sub.id for the payment link
+
+    payment = Payment(
+        user_id=int(user_id),
+        subscription_id=sub.id,
+        amount_cents=session.get("amount_total") or plan.price_cents,
+        currency=(session.get("currency") or plan.currency).upper(),
+        method=PayMethod.stripe,
+        status=PayStatus.succeeded,
+        provider_ref=session_id,
+    )
+    db.add(payment)
+    await db.commit()
+
+
+async def _log_failed_payment(db: AsyncSession, intent: dict) -> None:
+    """Record a failed payment_intent for audit. Idempotent on provider_ref."""
+    ref = intent.get("id")
+    if not ref:
+        return
+    existing = await db.execute(
+        select(Payment).where(Payment.provider_ref == ref).limit(1)
+    )
+    if existing.scalar_one_or_none() is not None:
+        return
+
+    metadata = intent.get("metadata") or {}
+    user_id = metadata.get("user_id")
+    if not user_id:
+        return  # can't attribute; skip
+
+    payment = Payment(
+        user_id=int(user_id),
+        subscription_id=None,
+        amount_cents=intent.get("amount") or 0,
+        currency=(intent.get("currency") or "usd").upper(),
+        method=PayMethod.stripe,
+        status=PayStatus.failed,
+        provider_ref=ref,
+    )
+    db.add(payment)
+    await db.commit()
+
+
+# ── POST /payments/stripe-webhook ─────────────────────────────────────────────
+@router.post("/stripe-webhook", status_code=200)
+async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
+    """
+    Stripe posts signed events here. We verify the signature, then handle:
+      - checkout.session.completed  → grant access (subscription + payment)
+      - payment_intent.payment_failed → log the failure
+    Always returns 200 quickly so Stripe doesn't retry.
+    DO NOT call from the frontend.
+    """
+    payload = await request.body()
+    sig_header = request.headers.get("stripe-signature")
+
+    if not WEBHOOK_SECRET:
+        raise HTTPException(status_code=500, detail="Webhook secret not configured.")
+
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, WEBHOOK_SECRET)
+    except ValueError:
+        # Malformed payload
+        raise HTTPException(status_code=400, detail="Invalid payload.")
+    except stripe.error.SignatureVerificationError:
+        # Forged / bad signature
+        raise HTTPException(status_code=400, detail="Invalid signature.")
+
+    event_type = event["type"]
+    data_object = event["data"]["object"]
+
+    if event_type == "checkout.session.completed":
+        await _grant_access_from_session(db, data_object)
+    elif event_type == "payment_intent.payment_failed":
+        await _log_failed_payment(db, data_object)
+    # Other event types: acknowledge without action.
+
+    return {"received": True}

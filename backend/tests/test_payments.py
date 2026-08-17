@@ -182,3 +182,75 @@ async def test_webhook_rejects_bad_signature(
             headers={"stripe-signature": "bad"},
         )
     assert resp.status_code == 400
+
+# ── Payment history tests (Slice 7 step 8) ────────────────────────────────────
+async def _seed_payment(db: AsyncSession, user_id: int, provider_ref: str):
+    from models import Payment, PayMethod, PayStatus
+    p = Payment(
+        user_id=user_id,
+        subscription_id=None,
+        amount_cents=4999,
+        currency="USD",
+        method=PayMethod.stripe,
+        status=PayStatus.succeeded,
+        provider_ref=provider_ref,
+    )
+    db.add(p)
+    await db.flush()
+    return p
+
+
+@pytest.mark.asyncio
+async def test_payments_me_returns_own_history(
+    client: AsyncClient, db: AsyncSession, student_user, student_token: str
+):
+    await _seed_payment(db, student_user.id, "cs_1")
+    await _seed_payment(db, student_user.id, "cs_2")
+
+    resp = await client.get("/payments/me", headers=auth_headers(student_token))
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["meta"]["total"] == 2
+    assert len(data["items"]) == 2
+
+
+@pytest.mark.asyncio
+async def test_payments_me_requires_auth(client: AsyncClient, db: AsyncSession):
+    resp = await client.get("/payments/me")
+    assert resp.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_payments_me_only_sees_own(
+    client: AsyncClient, db: AsyncSession, student_user, admin_user, student_token: str
+):
+    await _seed_payment(db, student_user.id, "cs_mine")
+    await _seed_payment(db, admin_user.id, "cs_theirs")  # someone else's
+
+    resp = await client.get("/payments/me", headers=auth_headers(student_token))
+    data = resp.json()
+    assert data["meta"]["total"] == 1  # only the student's own
+    assert data["items"][0]["provider_ref"] == "cs_mine"
+
+
+@pytest.mark.asyncio
+async def test_payments_admin_can_view_any_user(
+    client: AsyncClient, db: AsyncSession, student_user, admin_token: str
+):
+    await _seed_payment(db, student_user.id, "cs_admin_view")
+
+    resp = await client.get(
+        f"/payments/{student_user.id}", headers=auth_headers(admin_token)
+    )
+    assert resp.status_code == 200
+    assert resp.json()["meta"]["total"] == 1
+
+
+@pytest.mark.asyncio
+async def test_payments_admin_route_rejects_student(
+    client: AsyncClient, db: AsyncSession, student_user, student_token: str
+):
+    resp = await client.get(
+        f"/payments/{student_user.id}", headers=auth_headers(student_token)
+    )
+    assert resp.status_code == 403    

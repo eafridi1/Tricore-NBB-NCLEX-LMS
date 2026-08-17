@@ -8,10 +8,9 @@ NOT grant access. Access is granted by the webhook (stripe-webhook) when
 Stripe confirms payment. This separation is deliberate and load-bearing:
 never grant access from the checkout response.
 """
+
 from __future__ import annotations
-
 import os
-
 import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
@@ -22,6 +21,8 @@ from dependencies import get_current_user
 from models import Plan, Subscription, SubStatus, User
 from datetime import datetime, timedelta, timezone
 from models import Payment, PayMethod, PayStatus
+from sqlalchemy import select, func   # extend existing (you have select; add func)
+from dependencies import get_current_user, require_admin   # extend (add require_admin)
 
 
 router = APIRouter()
@@ -217,3 +218,78 @@ async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     # Other event types: acknowledge without action.
 
     return {"received": True}
+
+# ── Payment history (Slice 7 step 8) ──────────────────────────────────────────
+from datetime import datetime  # (if not already imported)
+
+
+class PaginationMeta(BaseModel):
+    total: int
+    page: int
+    per_page: int
+    pages: int
+
+
+class PaymentOut(BaseModel):
+    id: int
+    user_id: int
+    subscription_id: int | None
+    amount_cents: int
+    currency: str
+    method: PayMethod
+    status: PayStatus
+    provider_ref: str | None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class PaymentListResponse(BaseModel):
+    items: list[PaymentOut]
+    meta: PaginationMeta
+
+
+async def _paginate_payments(db: AsyncSession, user_id: int, page: int, per_page: int):
+    page = max(1, page)
+    per_page = max(1, min(per_page, 100))
+
+    count_q = select(func.count()).select_from(Payment).where(Payment.user_id == user_id)
+    total = (await db.execute(count_q)).scalar_one()
+
+    rows_q = (
+        select(Payment)
+        .where(Payment.user_id == user_id)
+        .order_by(Payment.created_at.desc())
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+    )
+    items = (await db.execute(rows_q)).scalars().all()
+
+    pages = (total + per_page - 1) // per_page if total > 0 else 0
+    return PaymentListResponse(
+        items=items,
+        meta=PaginationMeta(total=total, page=page, per_page=per_page, pages=pages),
+    )
+
+
+# ── GET /payments/me ──────────────────────────────────────────────────────────
+@router.get("/me", response_model=PaymentListResponse)
+async def my_payment_history(
+    page: int = 1,
+    per_page: int = 20,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return await _paginate_payments(db, current_user.id, page, per_page)
+
+
+# ── GET /payments/{user_id} (admin) ───────────────────────────────────────────
+@router.get("/{user_id}", response_model=PaymentListResponse)
+async def admin_payment_history(
+    user_id: int,
+    page: int = 1,
+    per_page: int = 20,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    return await _paginate_payments(db, user_id, page, per_page)

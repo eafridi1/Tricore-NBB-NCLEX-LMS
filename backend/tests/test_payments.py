@@ -253,4 +253,30 @@ async def test_payments_admin_route_rejects_student(
     resp = await client.get(
         f"/payments/{student_user.id}", headers=auth_headers(student_token)
     )
-    assert resp.status_code == 403    
+    assert resp.status_code == 403
+
+@pytest.mark.asyncio
+async def test_admin_stats_revenue_reflects_succeeded_payments(
+    client: AsyncClient, db: AsyncSession, admin_user, admin_token: str
+):
+    from datetime import datetime, timezone
+    from models import Payment, PayMethod, PayStatus
+
+    # Two succeeded payments this month + one failed (should be excluded).
+    now = datetime.now(timezone.utc)
+    for ref, status, amt in [
+        ("cs_rev1", PayStatus.succeeded, 4999),
+        ("cs_rev2", PayStatus.succeeded, 2999),
+        ("cs_rev3", PayStatus.failed, 9999),  # excluded from revenue
+    ]:
+        db.add(Payment(
+            user_id=admin_user.id, subscription_id=None,
+            amount_cents=amt, currency="USD",
+            method=PayMethod.stripe, status=status, provider_ref=ref,
+        ))
+    await db.flush()
+
+    resp = await client.get("/admin/stats", headers=auth_headers(admin_token))
+    assert resp.status_code == 200
+    # 4999 + 2999 = 7998; the failed 9999 is excluded
+    assert resp.json()["revenue_this_month_cents"] == 7998        

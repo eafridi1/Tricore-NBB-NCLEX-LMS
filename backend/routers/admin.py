@@ -50,6 +50,8 @@ from models import (
     SubStatus,
     User,
     UserRole,
+    Payment, 
+    PayStatus
 )
 
 router = APIRouter()
@@ -252,17 +254,14 @@ async def admin_stats(
         .where(QuizAttempt.started_at >= today_midnight)
     )).scalar_one()
 
-    # revenue_this_month_cents — payments table is Slice 7.
-    # Returning 0 until then, as specified in the task.
-    revenue_this_month_cents = 0
-    # TODO(slice-7): uncomment once Payment model exists:
-    # revenue_this_month_cents = (await db.execute(
-    #     select(func.sum(Payment.amount_cents))
-    #     .where(
-    #         Payment.status == PayStatus.succeeded,
-    #         Payment.created_at >= month_start,
-    #     )
-    # )).scalar_one_or_none() or 0
+   # revenue_this_month_cents — sum of succeeded payments this month (Slice 7).
+    revenue_this_month_cents = (await db.execute(
+        select(func.sum(Payment.amount_cents))
+        .where(
+            Payment.status == PayStatus.succeeded,
+            Payment.created_at >= month_start,
+        )
+    )).scalar_one_or_none() or 0
 
     return DashboardStatsResponse(
         total_students=total_students,

@@ -801,6 +801,163 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/subscriptions/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Plans
+         * @description Public — no auth. Returns plans with is_active=TRUE.
+         */
+        get: operations["list_plans_subscriptions_plans_get"];
+        put?: never;
+        /** Create Plan */
+        post: operations["create_plan_subscriptions_plans_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/subscriptions/plans/{plan_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Plan */
+        patch: operations["update_plan_subscriptions_plans__plan_id__patch"];
+        trace?: never;
+    };
+    "/subscriptions/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check Subscription
+         * @description Called on every protected page load. has_access reflects BR9 grace.
+         */
+        get: operations["check_subscription_subscriptions_check_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/subscriptions/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Subscriptions
+         * @description The current user's subscription history, newest first, with nested plan.
+         */
+        get: operations["my_subscriptions_subscriptions_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payments/stripe-checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Stripe Checkout
+         * @description Create a Stripe Checkout session for a plan. Returns the hosted URL.
+         *     Does NOT grant access — the webhook does that on payment confirmation.
+         */
+        post: operations["stripe_checkout_payments_stripe_checkout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payments/stripe-webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Stripe Webhook
+         * @description Stripe posts signed events here. We verify the signature, then handle:
+         *       - checkout.session.completed  → grant access (subscription + payment)
+         *       - payment_intent.payment_failed → log the failure
+         *     Always returns 200 quickly so Stripe doesn't retry.
+         *     DO NOT call from the frontend.
+         */
+        post: operations["stripe_webhook_payments_stripe_webhook_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payments/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Payment History */
+        get: operations["my_payment_history_payments_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payments/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin Payment History */
+        get: operations["admin_payment_history_payments__user_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -1206,6 +1363,87 @@ export interface components {
             is_published?: boolean | null;
         };
         /**
+         * PayMethod
+         * @enum {string}
+         */
+        PayMethod: "stripe" | "paypal";
+        /**
+         * PayStatus
+         * @enum {string}
+         */
+        PayStatus: "pending" | "succeeded" | "failed" | "refunded";
+        /** PaymentListResponse */
+        PaymentListResponse: {
+            /** Items */
+            items: components["schemas"]["PaymentOut"][];
+            meta: components["schemas"]["routers__payments__PaginationMeta"];
+        };
+        /** PaymentOut */
+        PaymentOut: {
+            /** Id */
+            id: number;
+            /** User Id */
+            user_id: number;
+            /** Subscription Id */
+            subscription_id: number | null;
+            /** Amount Cents */
+            amount_cents: number;
+            /** Currency */
+            currency: string;
+            method: components["schemas"]["PayMethod"];
+            status: components["schemas"]["PayStatus"];
+            /** Provider Ref */
+            provider_ref: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** PlanCreateRequest */
+        PlanCreateRequest: {
+            /**
+             * Name
+             * @example 3-Month Access
+             */
+            name: string;
+            /**
+             * Price Cents
+             * @description $89.99 = 8999
+             * @example 8999
+             */
+            price_cents: number;
+            /**
+             * Currency
+             * @default USD
+             */
+            currency: string;
+            /**
+             * Duration Days
+             * @example 90
+             */
+            duration_days: number;
+            /** Description */
+            description?: string | null;
+        };
+        /** PlanOut */
+        PlanOut: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Price Cents */
+            price_cents: number;
+            /** Currency */
+            currency: string;
+            /** Duration Days */
+            duration_days: number;
+            /** Description */
+            description: string | null;
+            /** Is Active */
+            is_active: boolean;
+        };
+        /**
          * QStatus
          * @enum {string}
          */
@@ -1486,6 +1724,21 @@ export interface components {
              */
             new_password: string;
         };
+        /** StripeCheckoutRequest */
+        StripeCheckoutRequest: {
+            /**
+             * Plan Id
+             * @example 1
+             */
+            plan_id: number;
+        };
+        /** StripeCheckoutResponse */
+        StripeCheckoutResponse: {
+            /** Checkout Url */
+            checkout_url: string;
+            /** Session Id */
+            session_id: string;
+        };
         /** StudentAnalyticsResponse */
         StudentAnalyticsResponse: {
             /** User Id */
@@ -1502,6 +1755,43 @@ export interface components {
             }[];
             /** Is At Risk */
             is_at_risk: boolean;
+        };
+        /**
+         * SubStatus
+         * @enum {string}
+         */
+        SubStatus: "active" | "grace" | "expired" | "cancelled" | "pending";
+        /** SubscriptionCheckResponse */
+        SubscriptionCheckResponse: {
+            /** Has Access */
+            has_access: boolean;
+            status: components["schemas"]["SubStatus"] | null;
+            /** End Date */
+            end_date: string | null;
+            /** Days Remaining */
+            days_remaining: number | null;
+        };
+        /** SubscriptionOut */
+        SubscriptionOut: {
+            /** Id */
+            id: number;
+            /** User Id */
+            user_id: number;
+            plan: components["schemas"]["PlanOut"];
+            status: components["schemas"]["SubStatus"];
+            /** Start Date */
+            start_date: string | null;
+            /** End Date */
+            end_date: string | null;
+            /** Grace Until */
+            grace_until: string | null;
+            /** Cancelled At */
+            cancelled_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /** TokenResponse */
         TokenResponse: {
@@ -1714,6 +2004,17 @@ export interface components {
         };
         /** PaginationMeta */
         routers__bookmarks__PaginationMeta: {
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Per Page */
+            per_page: number;
+            /** Pages */
+            pages: number;
+        };
+        /** PaginationMeta */
+        routers__payments__PaginationMeta: {
             /** Total */
             total: number;
             /** Page */
@@ -3720,6 +4021,253 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_plans_subscriptions_plans_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"][];
+                };
+            };
+        };
+    };
+    create_plan_subscriptions_plans_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_plan_subscriptions_plans__plan_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_subscription_subscriptions_check_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriptionCheckResponse"];
+                };
+            };
+        };
+    };
+    my_subscriptions_subscriptions_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriptionOut"][];
+                };
+            };
+        };
+    };
+    stripe_checkout_payments_stripe_checkout_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StripeCheckoutRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripeCheckoutResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stripe_webhook_payments_stripe_webhook_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    my_payment_history_payments_me_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                per_page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_payment_history_payments__user_id__get: {
+        parameters: {
+            query?: {
+                page?: number;
+                per_page?: number;
+            };
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentListResponse"];
                 };
             };
             /** @description Validation Error */

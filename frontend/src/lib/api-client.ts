@@ -75,6 +75,19 @@ apiClient.interceptors.response.use(
     const original = error.config as RetriableConfig | undefined;
     const status = error.response.status;
 
+        // 402 = authenticated but no active subscription (gated content).
+    // Send the user to the subscribe page rather than surfacing a raw error.
+    // Guard against a loop if somehow already heading there.
+    if (status === 402) {
+      if (
+        typeof window !== "undefined" &&
+        !window.location.pathname.startsWith("/subscribe")
+      ) {
+        window.location.href = "/subscribe";
+      }
+      return Promise.reject(error);
+    }
+
     // Only act on 401s, never on the auth-free paths, and only once.
     if (
       status !== 401 ||

@@ -210,6 +210,11 @@ async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
 
     event_type = event["type"]
     data_object = event["data"]["object"]
+    # The real Stripe event's object is a StripeObject, not a plain dict.
+    # Coerce to a dict so the .get() access in the handlers works
+    # (our unit tests passed dicts; live events pass StripeObjects).
+    if hasattr(data_object, "to_dict"):
+        data_object = data_object.to_dict()
 
     if event_type == "checkout.session.completed":
         await _grant_access_from_session(db, data_object)

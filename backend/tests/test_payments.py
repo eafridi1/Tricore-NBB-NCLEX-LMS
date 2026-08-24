@@ -279,4 +279,63 @@ async def test_admin_stats_revenue_reflects_succeeded_payments(
     resp = await client.get("/admin/stats", headers=auth_headers(admin_token))
     assert resp.status_code == 200
     # 4999 + 2999 = 7998; the failed 9999 is excluded
-    assert resp.json()["revenue_this_month_cents"] == 7998        
+    assert resp.json()["revenue_this_month_cents"] == 7998
+
+# ── Regression: webhook must handle StripeObject (not just plain dict) ─────────
+class _FakeStripeObject:
+    """
+    Mimics a Stripe StripeObject: the real webhook event's data.object has a
+    .to_dict() method and does NOT support .get() the way a plain dict does.
+    This reproduces the shape that caused a 500 in production (unit tests had
+    passed plain dicts and missed it).
+    """
+    def __init__(self, data: dict):
+        self._data = data
+
+    def to_dict(self):
+        return self._data
+
+    # Deliberately NO .get() — accessing it raises, like a real StripeObject,
+    # so if the handler forgets to call to_dict() the test fails.
+    def get(self, *args, **kwargs):
+        raise AttributeError("StripeObject has no .get() — must call to_dict() first")
+
+
+@pytest.mark.asyncio
+async def test_webhook_handles_stripe_object_not_just_dict(
+    client: AsyncClient, db: AsyncSession, student_user
+):
+    plan = await _seed_plan(db)
+    # Event whose data.object is a StripeObject-like thing (has to_dict, no usable get).
+    event = {
+        "type": "checkout.session.completed",
+        "data": {
+            "object": _FakeStripeObject({
+                "id": "cs_stripeobj_test",
+                "metadata": {"user_id": str(student_user.id), "plan_id": str(plan.id)},
+                "amount_total": 4999,
+                "currency": "usd",
+            })
+        },
+    }
+
+    with patch("stripe.Webhook.construct_event", return_value=event), \
+         patch("routers.payments.WEBHOOK_SECRET", "whsec_test"):
+        resp = await client.post(
+            "/payments/stripe-webhook",
+            content=b"{}",
+            headers={"stripe-signature": "test"},
+        )
+    # Must succeed (200) and actually grant access — proving to_dict() was used.
+    assert resp.status_code == 200
+
+    subs = (await db.execute(
+        select(Subscription).where(Subscription.user_id == student_user.id)
+    )).scalars().all()
+    assert len(subs) == 1
+    assert subs[0].status == SubStatus.active
+
+    pays = (await db.execute(
+        select(Payment).where(Payment.provider_ref == "cs_stripeobj_test")
+    )).scalars().all()
+    assert len(pays) == 1            

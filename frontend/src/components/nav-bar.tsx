@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLogout } from "@/hooks/use-logout";
+import { useSubscriptionCheck } from "@/hooks/use-subscription-check";
 
 const links = [
   { href: "/dashboard", label: "Dashboard" },
@@ -10,6 +11,53 @@ const links = [
   { href: "/materials", label: "Study Materials" },
   { href: "/announcements", label: "Announcements" },
 ];
+
+function SubscriptionBadge() {
+  const { data, isLoading } = useSubscriptionCheck();
+
+  if (isLoading || !data) return null;
+
+  // Active or grace → show a status pill with days remaining.
+  if (data.has_access) {
+    const isGrace = data.status === "grace";
+    const days = data.days_remaining;
+    return (
+      <span
+        style={{
+          fontSize: 12,
+          fontWeight: 600,
+          padding: "4px 10px",
+          borderRadius: 999,
+          background: isGrace ? "#fff4e5" : "#e8f5e9",
+          color: isGrace ? "#b26a00" : "#2e7d32",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {isGrace ? "Grace" : "Active"}
+        {typeof days === "number" ? ` · ${days}d left` : ""}
+      </span>
+    );
+  }
+
+  // No access → a subscribe prompt.
+  return (
+    <Link
+      href="/subscribe"
+      style={{
+        fontSize: 13,
+        fontWeight: 600,
+        padding: "6px 12px",
+        borderRadius: 8,
+        background: "#0B2540",
+        color: "white",
+        textDecoration: "none",
+        whiteSpace: "nowrap",
+      }}
+    >
+      Subscribe
+    </Link>
+  );
+}
 
 export function NavBar() {
   const pathname = usePathname();
@@ -64,6 +112,8 @@ export function NavBar() {
             );
           })}
         </nav>
+
+        <SubscriptionBadge />
 
         <Link
           href="/quiz/start"

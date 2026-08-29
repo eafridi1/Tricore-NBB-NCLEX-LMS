@@ -2,87 +2,91 @@
 
 import Link from "next/link";
 import { useAttempts } from "@/hooks/use-attempts";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export default function DashboardPage() {
   const { data, isLoading, isError, error } = useAttempts();
 
   return (
-    <main style={{ maxWidth: 640, margin: "40px auto", fontFamily: "system-ui", padding: "0 20px" }}>
-      <h1 style={{ marginBottom: 24 }}>Your Quiz Attempts</h1>
+    <main className="mx-auto max-w-2xl px-5 py-10">
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Your Quiz Attempts
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Review your progress and pick up where you left off.
+        </p>
+      </div>
 
-      {isLoading && <p>Loading attempts…</p>}
-
+      {isLoading && (
+        <p className="text-sm text-muted-foreground">Loading attempts…</p>
+      )}
       {isError && (
-        <p style={{ color: "crimson" }}>
+        <p className="text-sm text-destructive">
           {error instanceof Error ? error.message : "Failed to load attempts."}
         </p>
       )}
-
       {data && data.items.length === 0 && (
-        <p>You haven&apos;t taken any quizzes yet.</p>
+        <Card>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            You haven&apos;t taken any quizzes yet.
+          </CardContent>
+        </Card>
       )}
 
       {data && data.items.length > 0 && (
-        <ul style={{ display: "grid", gap: 12, padding: 0, listStyle: "none" }}>
+        <ul className="grid gap-3">
           {data.items.map((a) => {
-            const badge = statusBadge(a.status);
             const isCompleted = a.status === "completed";
             const isInProgress = a.status === "in_progress";
-
             return (
-              <li
-                key={a.attempt_id}
-                style={{ border: "1px solid #ddd", borderRadius: 8, padding: 12 }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span>{a.category_name ?? "General"}</span>
-                  <span
-                    style={{
-                      fontSize: 12,
-                      padding: "2px 8px",
-                      borderRadius: 999,
-                      background: badge.bg,
-                      color: badge.color,
-                    }}
-                  >
-                    {badge.label}
-                  </span>
-                </div>
+              <li key={a.attempt_id}>
+                <Card className="transition-shadow hover:shadow-md">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="font-medium text-foreground">
+                        {a.category_name ?? "General"}
+                      </span>
+                      <StatusBadge status={a.status} />
+                    </div>
 
-                <div style={{ fontSize: 14, color: "#666", marginTop: 4 }}>
-                  {isCompleted ? (
-                    <>
-                      Score: {a.score ?? "—"}% · {a.correct_count ?? 0}/
-                      {a.total_questions} correct
-                    </>
-                  ) : (
-                    <>{a.total_questions} questions</>
-                  )}
-                </div>
+                    <div className="mt-1.5 text-sm text-muted-foreground">
+                      {isCompleted ? (
+                        <>
+                          Score: {a.score ?? "—"}% · {a.correct_count ?? 0}/
+                          {a.total_questions} correct
+                        </>
+                      ) : (
+                        <>{a.total_questions} questions</>
+                      )}
+                    </div>
 
-                <div style={{ fontSize: 12, color: "#999", marginTop: 4 }}>
-                  Started: {new Date(a.started_at).toLocaleString()}
-                </div>
+                    <div className="mt-1 text-xs text-muted-foreground/70">
+                      Started: {new Date(a.started_at).toLocaleString()}
+                    </div>
 
-                {(isInProgress || isCompleted) && (
-                  <div style={{ marginTop: 8 }}>
-                    {isInProgress ? (
-                      <Link
-                        href={`/quiz/${a.attempt_id}`}
-                        style={{ fontSize: 13, color: "#0B2540" }}
-                      >
-                        Resume →
-                      </Link>
-                    ) : (
-                      <Link
-                        href={`/quiz/${a.attempt_id}/result`}
-                        style={{ fontSize: 13, color: "#0B2540" }}
-                      >
-                        View results →
-                      </Link>
+                    {(isInProgress || isCompleted) && (
+                      <div className="mt-3">
+                        {isInProgress ? (
+                          <Link
+                            href={`/quiz/${a.attempt_id}`}
+                            className="text-sm font-medium text-primary hover:underline"
+                          >
+                            Resume →
+                          </Link>
+                        ) : (
+                          <Link
+                            href={`/quiz/${a.attempt_id}/result`}
+                            className="text-sm font-medium text-primary hover:underline"
+                          >
+                            View results →
+                          </Link>
+                        )}
+                      </div>
                     )}
-                  </div>
-                )}
+                  </CardContent>
+                </Card>
               </li>
             );
           })}
@@ -92,21 +96,32 @@ export default function DashboardPage() {
   );
 }
 
-function statusBadge(status: string): {
-  label: string;
-  bg: string;
-  color: string;
-} {
-  switch (status) {
-    case "in_progress":
-      return { label: "In progress", bg: "#fff4e5", color: "#b26a00" };
-    case "completed":
-      return { label: "Completed", bg: "#e8f5e9", color: "#2e7d32" };
-    case "timed_out":
-      return { label: "Timed out", bg: "#fdecea", color: "#c62828" };
-    case "abandoned":
-      return { label: "Abandoned", bg: "#f0f0f0", color: "#777" };
-    default:
-      return { label: status, bg: "#f0f0f0", color: "#777" };
-  }
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<string, { label: string; className: string }> = {
+    in_progress: {
+      label: "In progress",
+      className: "bg-amber-100 text-amber-800 hover:bg-amber-100",
+    },
+    completed: {
+      label: "Completed",
+      className: "bg-green-100 text-green-800 hover:bg-green-100",
+    },
+    timed_out: {
+      label: "Timed out",
+      className: "bg-red-100 text-red-800 hover:bg-red-100",
+    },
+    abandoned: {
+      label: "Abandoned",
+      className: "bg-muted text-muted-foreground hover:bg-muted",
+    },
+  };
+  const cfg = map[status] ?? {
+    label: status,
+    className: "bg-muted text-muted-foreground hover:bg-muted",
+  };
+  return (
+    <Badge variant="secondary" className={cfg.className}>
+      {cfg.label}
+    </Badge>
+  );
 }

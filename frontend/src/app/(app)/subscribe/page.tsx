@@ -2,6 +2,9 @@
 
 import { usePlans } from "@/hooks/use-plans";
 import { useCheckout } from "@/hooks/use-checkout";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 function formatPrice(cents: number, currency: string): string {
   return new Intl.NumberFormat(undefined, {
@@ -14,68 +17,93 @@ export default function SubscribePage() {
   const { data: plans, isLoading, isError } = usePlans();
   const { startCheckout, loadingPlanId, error } = useCheckout();
 
+  // Highlight the longest-duration plan as "best value".
+  const bestValueId =
+    plans && plans.length > 0
+      ? plans.reduce((a, b) => (b.duration_days > a.duration_days ? b : a)).id
+      : null;
+
   return (
-    <main style={{ maxWidth: 640, margin: "40px auto", fontFamily: "system-ui", padding: "0 20px" }}>
-      <h1 style={{ marginBottom: 8 }}>Choose a Plan</h1>
-      <p style={{ color: "#666", marginBottom: 24, fontSize: 15 }}>
-        Subscribe to unlock full access to videos, study materials, quizzes, and analytics.
-      </p>
+    <main className="mx-auto max-w-2xl px-5 py-10">
+      <div className="mb-8 text-center">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Choose a Plan
+        </h1>
+        <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+          Unlock full access to video lessons, study materials, quizzes, and
+          performance analytics.
+        </p>
+      </div>
 
-      {isLoading && <p>Loading plans…</p>}
-      {isError && <p style={{ color: "crimson" }}>Failed to load plans.</p>}
-      {error && <p style={{ color: "crimson", marginBottom: 16 }}>{error}</p>}
-
-      {plans && plans.length === 0 && <p>No plans available right now.</p>}
+      {isLoading && (
+        <p className="text-center text-sm text-muted-foreground">
+          Loading plans…
+        </p>
+      )}
+      {isError && (
+        <p className="text-center text-sm text-destructive">
+          Failed to load plans.
+        </p>
+      )}
+      {error && (
+        <p className="mb-4 rounded-md bg-destructive/10 px-4 py-2 text-center text-sm text-destructive">
+          {error}
+        </p>
+      )}
+      {plans && plans.length === 0 && (
+        <p className="text-center text-sm text-muted-foreground">
+          No plans available right now.
+        </p>
+      )}
 
       {plans && plans.length > 0 && (
-        <div style={{ display: "grid", gap: 16 }}>
+        <div className="grid gap-4">
           {plans.map((plan) => {
             const isRedirecting = loadingPlanId === plan.id;
+            const isBestValue = plan.id === bestValueId;
             return (
-              <div
+              <Card
                 key={plan.id}
-                style={{
-                  border: "1px solid #ddd",
-                  borderRadius: 10,
-                  padding: 20,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 16,
-                }}
+                className={
+                  isBestValue
+                    ? "relative border-primary shadow-sm ring-1 ring-primary/20"
+                    : "relative"
+                }
               >
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 18 }}>{plan.name}</div>
-                  {plan.description && (
-                    <div style={{ color: "#666", fontSize: 14, marginTop: 4 }}>
-                      {plan.description}
+                {isBestValue && (
+                <Badge className="absolute top-3 right-4 bg-primary text-primary-foreground hover:bg-primary">
+                    Best value
+                  </Badge>
+                )}
+                <CardContent className="flex items-center justify-between gap-4 p-5">
+                  <div>
+                    <div className="text-lg font-semibold text-foreground">
+                      {plan.name}
                     </div>
-                  )}
-                  <div style={{ color: "#666", fontSize: 13, marginTop: 6 }}>
-                    {plan.duration_days} days of access
+                    {plan.description && (
+                      <div className="mt-1 text-sm text-muted-foreground">
+                        {plan.description}
+                      </div>
+                    )}
+                    <div className="mt-1.5 text-xs text-muted-foreground/70">
+                      {plan.duration_days} days of access
+                    </div>
                   </div>
-                </div>
-                <div style={{ textAlign: "right", whiteSpace: "nowrap" }}>
-                  <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 8 }}>
-                    {formatPrice(plan.price_cents, plan.currency)}
+
+                  <div className="whitespace-nowrap text-right">
+                    <div className="text-2xl font-bold text-foreground">
+                      {formatPrice(plan.price_cents, plan.currency)}
+                    </div>
+                    <Button
+                      className="mt-2"
+                      onClick={() => startCheckout(plan.id)}
+                      disabled={isRedirecting}
+                    >
+                      {isRedirecting ? "Redirecting…" : "Subscribe"}
+                    </Button>
                   </div>
-                  <button
-                    onClick={() => startCheckout(plan.id)}
-                    disabled={isRedirecting}
-                    style={{
-                      padding: "8px 18px",
-                      background: isRedirecting ? "#9aa8b5" : "#0B2540",
-                      color: "white",
-                      border: "none",
-                      borderRadius: 8,
-                      cursor: isRedirecting ? "default" : "pointer",
-                      fontSize: 14,
-                    }}
-                  >
-                    {isRedirecting ? "Redirecting…" : "Subscribe"}
-                  </button>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             );
           })}
         </div>

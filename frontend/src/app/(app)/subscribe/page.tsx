@@ -62,18 +62,18 @@ export default function SubscribePage() {
             const isRedirecting = loadingPlanId === plan.id;
             const isBestValue = plan.id === bestValueId;
             return (
-              <Card
+                            <Card
                 key={plan.id}
                 className={
                   isBestValue
-                    ? "relative border-primary shadow-sm ring-1 ring-primary/20"
+                    ? "relative overflow-visible border-primary shadow-md ring-2 ring-primary/30"
                     : "relative"
                 }
               >
                 {isBestValue && (
-                <Badge className="absolute top-3 right-4 bg-primary text-primary-foreground hover:bg-primary">
-                    Best value
-                  </Badge>
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1 text-xs font-semibold text-primary-foreground shadow-lg">
+                    ★ Best Offer
+                  </div>
                 )}
                 <CardContent className="flex items-center justify-between gap-4 p-5">
                   <div>

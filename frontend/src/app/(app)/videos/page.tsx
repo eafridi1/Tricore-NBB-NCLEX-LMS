@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useVideos } from "@/hooks/use-videos";
 import { useCategories } from "@/hooks/use-categories";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 function formatDuration(secs: number | null | undefined): string {
   if (!secs) return "";
@@ -19,61 +21,59 @@ export default function VideosPage() {
     categories?.find((c) => c.id === id)?.name ?? "General";
 
   return (
-    <main style={{ maxWidth: 640, margin: "40px auto", fontFamily: "system-ui", padding: "0 20px" }}>
-      <h1 style={{ marginBottom: 24 }}>Video Lessons</h1>
+    <main className="mx-auto max-w-2xl px-5 py-10">
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Video Lessons
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Watch lessons to reinforce key NCLEX topics.
+        </p>
+      </div>
 
-      {isLoading && <p>Loading videos…</p>}
+      {isLoading && (
+        <p className="text-sm text-muted-foreground">Loading videos…</p>
+      )}
       {isError && (
-        <p style={{ color: "crimson" }}>
+        <p className="text-sm text-destructive">
           {error instanceof Error ? error.message : "Failed to load videos."}
         </p>
       )}
-      {data && data.items.length === 0 && <p>No video lessons available yet.</p>}
+      {data && data.items.length === 0 && (
+        <Card>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            No video lessons available yet.
+          </CardContent>
+        </Card>
+      )}
 
       {data && data.items.length > 0 && (
-        <ul style={{ display: "grid", gap: 12, padding: 0, listStyle: "none" }}>
+        <ul className="grid gap-3">
           {data.items.map((video) => (
-            <li
-              key={video.id}
-              style={{ border: "1px solid #ddd", borderRadius: 8, padding: 14 }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  gap: 12,
-                }}
-              >
-                <div>
-                  <div style={{ fontWeight: 600 }}>{video.title}</div>
-                  {video.description && (
-                    <div style={{ fontSize: 14, color: "#666", marginTop: 4 }}>
-                      {video.description}
+            <li key={video.id}>
+              <Card className="transition-shadow hover:shadow-md">
+                <CardContent className="flex items-start justify-between gap-3 p-4">
+                  <div>
+                    <div className="font-medium text-foreground">
+                      {video.title}
                     </div>
-                  )}
-                  <div style={{ fontSize: 12, color: "#999", marginTop: 6 }}>
-                    {categoryName(video.category_id)}
-                    {video.duration_secs
-                      ? ` · ${formatDuration(video.duration_secs)}`
-                      : ""}
+                    {video.description && (
+                      <div className="mt-1 text-sm text-muted-foreground">
+                        {video.description}
+                      </div>
+                    )}
+                    <div className="mt-1.5 text-xs text-muted-foreground/70">
+                      {categoryName(video.category_id)}
+                      {video.duration_secs
+                        ? ` · ${formatDuration(video.duration_secs)}`
+                        : ""}
+                    </div>
                   </div>
-                </div>
-                <Link
-                  href={`/videos/${video.id}`}
-                  style={{
-                    padding: "8px 14px",
-                    background: "#0B2540",
-                    color: "white",
-                    borderRadius: 8,
-                    textDecoration: "none",
-                    whiteSpace: "nowrap",
-                    fontSize: 14,
-                  }}
-                >
-                  Watch
-                </Link>
-              </div>
+                  <Button asChild size="sm">
+                    <Link href={`/videos/${video.id}`}>Watch</Link>
+                  </Button>
+                </CardContent>
+              </Card>
             </li>
           ))}
         </ul>

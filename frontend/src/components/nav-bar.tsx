@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLogout } from "@/hooks/use-logout";
 import { useSubscriptionCheck } from "@/hooks/use-subscription-check";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 const links = [
   { href: "/dashboard", label: "Dashboard" },
@@ -18,45 +20,28 @@ function SubscriptionBadge() {
 
   if (isLoading || !data) return null;
 
-  // Active or grace → show a status pill with days remaining.
   if (data.has_access) {
     const isGrace = data.status === "grace";
     const days = data.days_remaining;
     return (
-      <span
-        style={{
-          fontSize: 12,
-          fontWeight: 600,
-          padding: "4px 10px",
-          borderRadius: 999,
-          background: isGrace ? "#fff4e5" : "#e8f5e9",
-          color: isGrace ? "#b26a00" : "#2e7d32",
-          whiteSpace: "nowrap",
-        }}
+      <Badge
+        variant="secondary"
+        className={
+          isGrace
+            ? "whitespace-nowrap bg-amber-100 text-amber-800 hover:bg-amber-100"
+            : "whitespace-nowrap bg-green-100 text-green-800 hover:bg-green-100"
+        }
       >
         {isGrace ? "Grace" : "Active"}
         {typeof days === "number" ? ` · ${days}d left` : ""}
-      </span>
+      </Badge>
     );
   }
 
-  // No access → a subscribe prompt.
   return (
-    <Link
-      href="/subscribe"
-      style={{
-        fontSize: 13,
-        fontWeight: 600,
-        padding: "6px 12px",
-        borderRadius: 8,
-        background: "#0B2540",
-        color: "white",
-        textDecoration: "none",
-        whiteSpace: "nowrap",
-      }}
-    >
-      Subscribe
-    </Link>
+    <Button asChild size="sm">
+      <Link href="/subscribe">Subscribe</Link>
+    </Button>
   );
 }
 
@@ -65,48 +50,27 @@ export function NavBar() {
   const logout = useLogout();
 
   return (
-    <header
-      style={{
-        borderBottom: "1px solid #e5e5e5",
-        background: "white",
-        fontFamily: "system-ui",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 960,
-          margin: "0 auto",
-          padding: "12px 20px",
-          display: "flex",
-          alignItems: "center",
-          gap: 24,
-        }}
-      >
+    <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <div className="mx-auto flex max-w-5xl items-center gap-6 px-5 py-3">
         <Link
           href="/dashboard"
-          style={{
-            fontWeight: 700,
-            fontSize: 18,
-            color: "#0B2540",
-            textDecoration: "none",
-          }}
+          className="text-lg font-bold tracking-tight text-primary"
         >
           NBB
         </Link>
 
-        <nav style={{ display: "flex", gap: 18, flex: 1 }}>
+        <nav className="flex flex-1 items-center gap-5">
           {links.map((l) => {
             const active = pathname === l.href;
             return (
               <Link
                 key={l.href}
                 href={l.href}
-                style={{
-                  fontSize: 14,
-                  color: active ? "#0B2540" : "#666",
-                  fontWeight: active ? 600 : 400,
-                  textDecoration: "none",
-                }}
+                className={
+                  active
+                    ? "text-sm font-semibold text-primary"
+                    : "text-sm font-normal text-muted-foreground transition-colors hover:text-foreground"
+                }
               >
                 {l.label}
               </Link>
@@ -116,35 +80,18 @@ export function NavBar() {
 
         <SubscriptionBadge />
 
-        <Link
-          href="/quiz/start"
-          style={{
-            padding: "8px 14px",
-            background: "#0B2540",
-            color: "white",
-            borderRadius: 8,
-            textDecoration: "none",
-            fontSize: 14,
-          }}
-        >
-          Start Quiz
-        </Link>
+        <Button asChild size="sm">
+          <Link href="/quiz/start">Start Quiz</Link>
+        </Button>
 
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => logout.run()}
           disabled={logout.isPending}
-          style={{
-            padding: "8px 12px",
-            background: "none",
-            border: "1px solid #ddd",
-            borderRadius: 8,
-            fontSize: 14,
-            cursor: logout.isPending ? "default" : "pointer",
-            color: "#666",
-          }}
         >
           {logout.isPending ? "…" : "Log out"}
-        </button>
+        </Button>
       </div>
     </header>
   );

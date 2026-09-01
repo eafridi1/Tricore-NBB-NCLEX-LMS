@@ -1,6 +1,7 @@
 "use client";
 
 import { useAnnouncements } from "@/hooks/use-announcements";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function AnnouncementsPage() {
   const { data, isLoading, isError, error } = useAnnouncements();
@@ -15,37 +16,53 @@ export default function AnnouncementsPage() {
     : [];
 
   return (
-    <main style={{ maxWidth: 640, margin: "40px auto", fontFamily: "system-ui", padding: "0 20px" }}>
-      <h1 style={{ marginBottom: 24 }}>Announcements</h1>
+    <main className="mx-auto max-w-2xl px-5 py-10">
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Announcements
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Updates and news from the NBB team.
+        </p>
+      </div>
 
-      {isLoading && <p>Loading announcements…</p>}
-
+      {isLoading && (
+        <p className="text-sm text-muted-foreground">Loading announcements…</p>
+      )}
       {isError && (
-        <p style={{ color: "crimson" }}>
-          {error instanceof Error ? error.message : "Failed to load announcements."}
+        <p className="text-sm text-destructive">
+          {error instanceof Error
+            ? error.message
+            : "Failed to load announcements."}
         </p>
       )}
-
-      {data && items.length === 0 && <p>No announcements yet.</p>}
+      {data && items.length === 0 && (
+        <Card>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            No announcements yet.
+          </CardContent>
+        </Card>
+      )}
 
       {items.length > 0 && (
-        <div style={{ display: "grid", gap: 16 }}>
+        <div className="grid gap-4">
           {items.map((a) => (
-            <article
-              key={a.id}
-              style={{ border: "1px solid #ddd", borderRadius: 10, padding: 16 }}
-            >
-              <h2 style={{ margin: "0 0 6px", fontSize: 18 }}>{a.title}</h2>
-              <div style={{ fontSize: 12, color: "#999", marginBottom: 10 }}>
-                {new Date(a.published_at ?? a.created_at).toLocaleDateString(
-                  undefined,
-                  { year: "numeric", month: "long", day: "numeric" }
-                )}
-              </div>
-              <div style={{ fontSize: 15, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
-                {a.body}
-              </div>
-            </article>
+            <Card key={a.id}>
+              <CardContent className="p-5">
+                <h2 className="text-lg font-semibold text-foreground">
+                  {a.title}
+                </h2>
+                <div className="mt-1 text-xs text-muted-foreground/70">
+                  {new Date(a.published_at ?? a.created_at).toLocaleDateString(
+                    undefined,
+                    { year: "numeric", month: "long", day: "numeric" }
+                  )}
+                </div>
+                <div className="mt-3 whitespace-pre-wrap leading-relaxed text-foreground/80">
+                  {a.body}
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}

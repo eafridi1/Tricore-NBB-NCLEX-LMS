@@ -8,6 +8,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Link } from "lucide-react";
+
 
 type Phase = "credentials" | "otp";
 
@@ -41,7 +43,12 @@ export default function LoginPage() {
       }
     );
   }
-
+              <p className="text-center text-sm text-muted-foreground">
+                Don&apos;t have an account?{" "}
+                <Link href="/register" className="font-medium text-primary hover:underline">
+                  Sign up
+                </Link>
+              </p>
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-5">
       <div className="mb-6 text-center">

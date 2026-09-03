@@ -11,6 +11,7 @@ import { useBookmark } from "@/hooks/use-bookmark";
 import { QuizResults } from "@/components/quiz-results";
 import { isAxiosError } from "axios";
 import type { components } from "@/types/api";
+import { Button } from "@/components/ui/button";
 
 type QuizResultResponse = components["schemas"]["QuizResultResponse"];
 
@@ -31,7 +32,7 @@ export default function QuizPage() {
   if (resume.kind === "error")
     return (
       <Centered>
-        <span style={{ color: "crimson" }}>{resume.message}</span>
+        <span className="text-destructive">{resume.message}</span>
       </Centered>
     );
 
@@ -39,14 +40,16 @@ export default function QuizPage() {
     return (
       <Centered>
         <div>
-          <h2>This attempt has ended</h2>
-          <p style={{ color: "#666" }}>
+          <h2 className="text-lg font-semibold text-foreground">
+            This attempt has ended
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
             {resume.reason === "session_expired"
               ? "The time limit for this quiz has passed."
               : "This quiz is no longer in progress."}
           </p>
-          <p style={{ marginTop: 16 }}>
-            <Link href="/dashboard" style={{ color: "#0B2540" }}>
+          <p className="mt-4">
+            <Link href="/dashboard" className="text-sm text-primary hover:underline">
               ← Back to dashboard
             </Link>
           </p>
@@ -132,7 +135,7 @@ function ActiveQuiz({
   if (isError)
     return (
       <Centered>
-        <span style={{ color: "crimson" }}>
+        <span className="text-destructive">
           {error instanceof Error ? error.message : "Failed to load question."}
         </span>
       </Centered>
@@ -173,44 +176,27 @@ function ActiveQuiz({
   const busy = answer.isPending || finish.isPending;
 
   return (
-    <main style={{ maxWidth: 640, margin: "40px auto", fontFamily: "system-ui" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 8,
-        }}
-      >
-        <div style={{ fontSize: 13, color: "#666" }}>
-          Question {q.question_index + 1} of {q.total_questions} · {q.category_name}{" "}
-          · {q.difficulty}
+    <main className="mx-auto max-w-2xl px-5 py-10">
+      <div className="mb-2 flex items-center justify-between">
+        <div className="text-xs text-muted-foreground">
+          Question {q.question_index + 1} of {q.total_questions} · {q.category_name} · {q.difficulty}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div className="flex items-center gap-3">
           <button
             onClick={toggleBookmark}
             disabled={bookmark.isPending}
             title={bookmarked ? "Remove bookmark" : "Bookmark this question"}
-            style={{
-              border: "none",
-              background: "none",
-              cursor: bookmark.isPending ? "default" : "pointer",
-              fontSize: 18,
-              lineHeight: 1,
-              color: bookmarked ? "#e0a800" : "#bbb",
-              padding: 0,
-            }}
+            className={`text-lg leading-none ${
+              bookmarked ? "text-amber-500" : "text-muted-foreground/50"
+            } ${bookmark.isPending ? "cursor-default" : "cursor-pointer"}`}
           >
             {bookmarked ? "★" : "☆"}
           </button>
           {remaining != null && (
             <div
-              style={{
-                fontSize: 14,
-                fontWeight: 600,
-                fontVariantNumeric: "tabular-nums",
-                color: remaining <= 30 ? "#c62828" : "#0B2540",
-              }}
+              className={`text-sm font-semibold tabular-nums ${
+                remaining <= 30 ? "text-red-600" : "text-primary"
+              }`}
             >
               {formatTime(remaining)}
             </div>
@@ -218,26 +204,24 @@ function ActiveQuiz({
         </div>
       </div>
 
-      <h2 style={{ marginBottom: 20, lineHeight: 1.4 }}>{q.stem}</h2>
+      <h2 className="mb-5 text-lg font-medium leading-relaxed text-foreground">
+        {q.stem}
+      </h2>
 
-      <ul style={{ display: "grid", gap: 10, padding: 0, listStyle: "none" }}>
+      <ul className="grid list-none gap-2.5 p-0">
         {q.options.map((opt, i) => {
           const isSelected = selected === i;
           return (
             <li key={i}>
               <button
                 onClick={() => setSelected(i)}
-                style={{
-                  width: "100%",
-                  textAlign: "left",
-                  border: isSelected ? "2px solid #0B2540" : "1px solid #ddd",
-                  background: isSelected ? "#eef2f7" : "white",
-                  borderRadius: 8,
-                  padding: 12,
-                  cursor: "pointer",
-                }}
+                className={`w-full rounded-lg border p-3 text-left transition-colors ${
+                  isSelected
+                    ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                    : "border-border bg-card hover:bg-muted/50"
+                }`}
               >
-                <strong style={{ marginRight: 8 }}>
+                <strong className="mr-2 text-primary">
                   {String.fromCharCode(65 + i)}.
                 </strong>
                 {opt.text}
@@ -247,43 +231,30 @@ function ActiveQuiz({
         })}
       </ul>
 
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 24 }}>
-        <button onClick={handlePrev} disabled={index === 0} style={{ padding: 10 }}>
+      <div className="mt-6 flex justify-between">
+        <Button variant="outline" onClick={handlePrev} disabled={index === 0}>
           Previous
-        </button>
-        <button
-          onClick={handleNext}
-          disabled={selected === null || busy}
-          style={{ padding: 10 }}
-        >
-          {busy ? "Saving…" : isLast ? "Finish" : "Next"}
-        </button>
+        </Button>
+        <Button onClick={handleNext} disabled={selected === null || busy}>
+          {busy ? "Loading…" : isLast ? "Finish" : "Next"}
+        </Button>
       </div>
-
-      {(answer.isError || finish.isError) && !autoFinishedRef.current && (
-        <p style={{ color: "crimson", marginTop: 12 }}>
-          Could not save. This attempt may have expired —{" "}
-          <Link href="/dashboard" style={{ color: "#0B2540" }}>
-            back to dashboard
-          </Link>
-          .
-        </p>
-      )}
     </main>
   );
 }
 
-function formatTime(secs: number): string {
-  const s = Math.max(0, secs);
-  const m = Math.floor(s / 60);
-  const r = s % 60;
-  return `${m}:${r.toString().padStart(2, "0")}`;
-}
-
 function Centered({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ padding: 40, fontFamily: "system-ui", textAlign: "center" }}>
-      {children}
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="text-center">{children}</div>
     </div>
   );
+}
+
+function formatTime(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  return `${m}:${s.toString().padStart(2, "0")}`;
 }

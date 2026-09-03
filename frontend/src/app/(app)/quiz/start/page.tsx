@@ -4,6 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCategories } from "@/hooks/use-categories";
 import { useStartQuiz } from "@/hooks/use-start-quiz";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function QuizStartPage() {
   const router = useRouter();
@@ -24,87 +28,88 @@ export default function QuizStartPage() {
         timed,
         time_limit_secs: timed ? timeLimitMins * 60 : null,
       },
-      {
-        onSuccess: (res) => {
-          router.push(`/quiz/${res.attempt_id}`);
-        },
-      }
+      { onSuccess: (res) => router.push(`/quiz/${res.attempt_id}`) }
     );
   }
 
   return (
-    <main style={{ maxWidth: 480, margin: "60px auto", fontFamily: "system-ui" }}>
-      <h1 style={{ marginBottom: 24 }}>Start a Quiz</h1>
+    <main className="mx-auto max-w-md px-5 py-14">
+      <h1 className="mb-6 text-2xl font-semibold tracking-tight text-foreground">
+        Start a Quiz
+      </h1>
 
-      <div style={{ display: "grid", gap: 16 }}>
-        <label style={{ display: "grid", gap: 4 }}>
-          Category
-          <select
-            value={categoryId ?? ""}
-            onChange={(e) =>
-              setCategoryId(e.target.value ? Number(e.target.value) : null)
-            }
-            style={{ padding: 8 }}
-          >
-            <option value="">All categories</option>
-            {categories?.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
+      <Card>
+        <CardContent className="grid gap-5 p-6">
+          <div className="grid gap-1.5">
+            <Label htmlFor="category">Category</Label>
+            <select
+              id="category"
+              value={categoryId ?? ""}
+              onChange={(e) =>
+                setCategoryId(e.target.value ? Number(e.target.value) : null)
+              }
+              className="h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="">All categories</option>
+              {categories?.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <label style={{ display: "grid", gap: 4 }}>
-          Number of questions
-          <input
-            type="number"
-            min={1}
-            max={100}
-            value={questionCount}
-            onChange={(e) => setQuestionCount(Number(e.target.value))}
-            style={{ padding: 8 }}
-          />
-        </label>
-
-        <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <input
-            type="checkbox"
-            checked={timed}
-            onChange={(e) => setTimed(e.target.checked)}
-          />
-          Timed quiz
-        </label>
-
-        {timed && (
-          <label style={{ display: "grid", gap: 4 }}>
-            Time limit (minutes)
-            <input
+          <div className="grid gap-1.5">
+            <Label htmlFor="count">Number of questions</Label>
+            <Input
+              id="count"
               type="number"
               min={1}
-              value={timeLimitMins}
-              onChange={(e) => setTimeLimitMins(Number(e.target.value))}
-              style={{ padding: 8 }}
+              max={100}
+              value={questionCount}
+              onChange={(e) => setQuestionCount(Number(e.target.value))}
             />
+          </div>
+
+          <label className="flex items-center gap-2 text-sm text-foreground">
+            <input
+              type="checkbox"
+              checked={timed}
+              onChange={(e) => setTimed(e.target.checked)}
+              className="h-4 w-4 accent-primary"
+            />
+            Timed quiz
           </label>
-        )}
 
-        <button
-          onClick={handleStart}
-          disabled={startQuiz.isPending || questionCount < 1}
-          style={{ padding: 12 }}
-        >
-          {startQuiz.isPending ? "Starting…" : "Start Quiz"}
-        </button>
+          {timed && (
+            <div className="grid gap-1.5">
+              <Label htmlFor="limit">Time limit (minutes)</Label>
+              <Input
+                id="limit"
+                type="number"
+                min={1}
+                value={timeLimitMins}
+                onChange={(e) => setTimeLimitMins(Number(e.target.value))}
+              />
+            </div>
+          )}
 
-        {startQuiz.isError && (
-          <p style={{ color: "crimson" }}>
-            {startQuiz.error instanceof Error
-              ? startQuiz.error.message
-              : "Could not start quiz."}
-          </p>
-        )}
-      </div>
+          <Button
+            onClick={handleStart}
+            disabled={startQuiz.isPending || questionCount < 1}
+          >
+            {startQuiz.isPending ? "Starting…" : "Start Quiz"}
+          </Button>
+
+          {startQuiz.isError && (
+            <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {startQuiz.error instanceof Error
+                ? startQuiz.error.message
+                : "Could not start quiz."}
+            </p>
+          )}
+        </CardContent>
+      </Card>
     </main>
   );
 }

@@ -19,16 +19,18 @@ export default function QuizResultPage() {
     return (
       <Centered>
         <div>
-          <h2>{notCompleted ? "Not available yet" : "Couldn't load results"}</h2>
-          <p style={{ color: "#666" }}>
+          <h2 className="text-lg font-semibold text-foreground">
+            {notCompleted ? "Not available yet" : "Couldn't load results"}
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
             {notCompleted
               ? "This quiz attempt hasn't been completed."
               : error instanceof Error
               ? error.message
               : "Something went wrong."}
           </p>
-          <p style={{ marginTop: 16 }}>
-            <Link href="/dashboard" style={{ color: "#0B2540" }}>
+          <p className="mt-4">
+            <Link href="/dashboard" className="text-sm text-primary hover:underline">
               ← Back to dashboard
             </Link>
           </p>
@@ -43,9 +45,5 @@ export default function QuizResultPage() {
 }
 
 function Centered({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{ padding: 40, fontFamily: "system-ui", textAlign: "center" }}>
-      {children}
-    </div>
-  );
+  return <div className="p-10 text-center">{children}</div>;
 }

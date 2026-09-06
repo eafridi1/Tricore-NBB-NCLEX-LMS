@@ -9,7 +9,7 @@ import { useMyAnalytics, type AnalyticsPeriod } from "@/hooks/use-my-analytics";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-const NAVY = "#0B2540";
+const NAVY = "#3DAEDB";
 
 type TrendPoint = { date: string; score: number };
 type WeakArea = { category_name: string; avg_score: number; attempt_count: number };

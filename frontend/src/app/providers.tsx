@@ -2,6 +2,7 @@
 import { SessionProvider } from "@/components/session-provider";
 import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ThemeProvider } from "next-themes";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -20,7 +21,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SessionProvider>{children}</SessionProvider>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+        <SessionProvider>{children}</SessionProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

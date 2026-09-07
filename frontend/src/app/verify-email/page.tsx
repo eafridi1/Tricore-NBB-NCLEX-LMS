@@ -87,6 +87,12 @@ export default function VerifyEmailPage() {
               <Button asChild variant="outline" className="mt-2">
                 <Link href="/login">Back to Sign in</Link>
               </Button>
+                            <Link
+                href="/resend-verification"
+                className="text-sm text-primary hover:underline"
+              >
+                Request a new verification link
+              </Link>
             </>
           )}
         </CardContent>

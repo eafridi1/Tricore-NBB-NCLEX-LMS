@@ -26,6 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
 from dependencies import get_current_user
 from models import Bookmark, Question, User
+from typing import Any  # for the options JSONB
 
 router = APIRouter()
 
@@ -57,6 +58,92 @@ class PaginationMeta(BaseModel):
 class BookmarkListResponse(BaseModel):
     items: list[BookmarkOut]
     meta: PaginationMeta
+
+# ── Bookmarks review (hydrated with question content) ─────────────────────────
+class BookmarkedQuestion(BaseModel):
+    bookmark_id: int
+    question_id: int
+    created_at: datetime
+    stem: str
+    options: list[Any]
+    category_id: int | None
+    difficulty: str
+    correct_answer: int
+    rationale: str
+
+    model_config = {"from_attributes": True}
+
+
+class BookmarkReviewResponse(BaseModel):
+    items: list[BookmarkedQuestion]
+    meta: PaginationMeta
+
+
+@router.get("/review", response_model=BookmarkReviewResponse)
+async def review_bookmarks(
+    page: int = 1,
+    per_page: int = 20,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    The student's bookmarked questions, hydrated with full question content
+    including the correct answer and rationale. This is a REVIEW/study context
+    (own saved questions, post-quiz) — unlike the live quiz endpoints, answers
+    are intentionally included here so students can study what they saved.
+    """
+    page = max(1, page)
+    per_page = max(1, min(per_page, 100))
+
+    base_query = (
+        select(Bookmark, Question)
+        .join(Question, Question.id == Bookmark.question_id)
+        .where(
+            Bookmark.user_id == current_user.id,
+            Question.is_deleted == False,  # noqa: E712
+        )
+    )
+
+    count_q = select(func.count()).select_from(
+        select(Bookmark.id)
+        .join(Question, Question.id == Bookmark.question_id)
+        .where(
+            Bookmark.user_id == current_user.id,
+            Question.is_deleted == False,  # noqa: E712
+        )
+        .subquery()
+    )
+    total = (await db.execute(count_q)).scalar_one()
+
+    result = await db.execute(
+        base_query
+        .order_by(Bookmark.created_at.desc())
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+    )
+    rows = result.all()  # list of (Bookmark, Question) tuples
+
+    pages = (total + per_page - 1) // per_page if total > 0 else 0
+
+    items = [
+        BookmarkedQuestion(
+            bookmark_id=bm.id,
+            question_id=q.id,
+            created_at=bm.created_at,
+            stem=q.stem,
+            options=q.options,
+            category_id=q.category_id,
+            difficulty=q.difficulty.value if hasattr(q.difficulty, "value") else str(q.difficulty),
+            correct_answer=q.correct_answer,
+            rationale=q.rationale,
+        )
+        for bm, q in rows
+    ]
+
+    return BookmarkReviewResponse(
+        items=items,
+        meta=PaginationMeta(total=total, page=page, per_page=per_page, pages=pages),
+    )
 
 
 # ── Route ────────────────────────────────────────────────────────────────────

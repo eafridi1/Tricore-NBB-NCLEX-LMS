@@ -510,6 +510,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/bookmarks/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Review Bookmarks
+         * @description The student's bookmarked questions, hydrated with full question content
+         *     including the correct answer and rationale. This is a REVIEW/study context
+         *     (own saved questions, post-quiz) — unlike the live quiz endpoints, answers
+         *     are intentionally included here so students can study what they saved.
+         */
+        get: operations["review_bookmarks_bookmarks_review_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/bookmarks": {
         parameters: {
             query?: never;
@@ -1123,6 +1146,36 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+        };
+        /** BookmarkReviewResponse */
+        BookmarkReviewResponse: {
+            /** Items */
+            items: components["schemas"]["BookmarkedQuestion"][];
+            meta: components["schemas"]["routers__bookmarks__PaginationMeta"];
+        };
+        /** BookmarkedQuestion */
+        BookmarkedQuestion: {
+            /** Bookmark Id */
+            bookmark_id: number;
+            /** Question Id */
+            question_id: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Stem */
+            stem: string;
+            /** Options */
+            options: unknown[];
+            /** Category Id */
+            category_id: number | null;
+            /** Difficulty */
+            difficulty: string;
+            /** Correct Answer */
+            correct_answer: number;
+            /** Rationale */
+            rationale: string;
         };
         /** BulkImportResponse */
         BulkImportResponse: {
@@ -3266,6 +3319,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LoginLogsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_bookmarks_bookmarks_review_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                per_page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookmarkReviewResponse"];
                 };
             };
             /** @description Validation Error */

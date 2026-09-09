@@ -15,6 +15,7 @@ const links = [
   { href: "/materials", label: "Study Materials" },
   { href: "/videos", label: "Video Lessons" },
   { href: "/announcements", label: "Announcements" },
+  { href: "/bookmarks", label: "Saved Questions" },
 ];
 
 function SubscriptionBadge() {

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { useMe } from "@/hooks/use-me";
 
 const links = [
   { href: "/dashboard", label: "Dashboard" },
@@ -70,6 +71,7 @@ function ThemeToggle() {
 export function NavBar() {
   const pathname = usePathname();
   const logout = useLogout();
+  const { data: me } = useMe();
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -83,6 +85,7 @@ export function NavBar() {
 
         <nav className="flex flex-1 items-center gap-5">
           {links.map((l) => {
+                     
             const active = pathname === l.href;
             return (
               <Link
@@ -98,6 +101,18 @@ export function NavBar() {
               </Link>
             );
           })}
+           {me?.role === "admin" && (
+            <Link
+              href="/admin"
+              className={
+                pathname.startsWith("/admin")
+                  ? "text-sm font-semibold text-primary"
+                  : "text-sm text-muted-foreground transition-colors hover:text-foreground"
+              }
+            >
+              Admin
+            </Link>
+          )}
         </nav>
         <ThemeToggle />
         <SubscriptionBadge />

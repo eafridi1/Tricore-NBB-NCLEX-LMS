@@ -8,8 +8,11 @@ import { useMe } from "@/hooks/use-me";
 
 const adminLinks = [
   { href: "/admin", label: "Overview" },
-  // future: { href: "/admin/questions", label: "Questions" }, etc.
+  
+  { href: "/admin/students", label: "At-Risk Students" },
 ];
+  // future: { href: "/admin/questions", label: "Questions" }, etc.
+
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { data: me, isLoading, isError } = useMe();

@@ -8,8 +8,8 @@ import { useMe } from "@/hooks/use-me";
 
 const adminLinks = [
   { href: "/admin", label: "Overview" },
-  
   { href: "/admin/students", label: "At-Risk Students" },
+  { href: "/admin/questions", label: "Questions" },
 ];
   // future: { href: "/admin/questions", label: "Questions" }, etc.
 

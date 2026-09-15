@@ -10,6 +10,7 @@ const adminLinks = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/students", label: "At-Risk Students" },
   { href: "/admin/questions", label: "Questions" },
+  { href: "/admin/users", label: "Users" },
 ];
   // future: { href: "/admin/questions", label: "Questions" }, etc.
 

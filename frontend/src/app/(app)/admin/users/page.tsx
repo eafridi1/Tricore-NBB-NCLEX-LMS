@@ -40,7 +40,18 @@ export default function AdminUsersPage() {
                   <select
                     value={u.role}
                     disabled={updateM.isPending}
-                    onChange={(e) => updateM.mutate({ id: u.id, role: e.target.value })}
+                                        onChange={(e) => {
+                      const newRole = e.target.value;
+                      if (
+                        newRole === "admin" &&
+                        !window.confirm(
+                          "Make this user an admin? They'll have full platform access."
+                        )
+                      ) {
+                        return; // cancelled — dropdown reverts on next refetch
+                      }
+                      updateM.mutate({ id: u.id, role: newRole });
+                    }}
                     className="h-8 rounded-md border border-input bg-background text-foreground px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     {["student", "reviewer", "admin"].map((r) => (
@@ -51,7 +62,12 @@ export default function AdminUsersPage() {
                     size="sm"
                     variant={u.is_active ? "outline" : "default"}
                     disabled={updateM.isPending}
-                    onClick={() => updateM.mutate({ id: u.id, is_active: !u.is_active })}
+                    onClick={() => {
+                      if (u.is_active && !window.confirm("Deactivate this user?")) {
+                        return;
+                      }
+                      updateM.mutate({ id: u.id, is_active: !u.is_active });
+                    }}
                   >
                     {u.is_active ? "Deactivate" : "Activate"}
                   </Button>
